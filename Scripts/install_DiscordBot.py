@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
-"""Install utility for setting up DiscordBot"""
+"""Install utility for setting up DiscordBot
+
+NOTE: designed to run on default python with minimal dependencies
+
+"""
 
 from os import path
+import logging
 import pip
 
 try:
@@ -11,32 +16,54 @@ except ImportError:
     pip.main(['install', 'plumbum'])
     from plumbum import cli, local
 
-try:
-    import prosper.common.prosper_logging
-except ImportError:
-    pip_command = local['pip']
-    pip_command(
-        'install',
-        'ProsperCommon~=0.4.0',
-        '--extra-index-url=https://repo.fury.io/lockefox/'
-    )
-    import prosper.common.prosper_logging as p_logging
-    import prosper.common.prosper_config as p_config
+#try:
+#    import prosper.common.prosper_logging
+#except ImportError:
+#    pip_command = local['pip']
+#    pip_command(
+#        'install',
+#        'ProsperCommon~=0.4.0',
+#        '--extra-index-url=https://repo.fury.io/lockefox/'
+#    )
+#    import prosper.common.prosper_logging as p_logging
+#    import prosper.common.prosper_config as p_config
 
 HERE = path.abspath(path.dirname(__file__))
 ROOT = path.dirname(HERE)
 CONFIG_PATH = path.join(HERE, 'installer_config.cfg')
 
-CONFIG = p_config.ProsperConfig(CONFIG_PATH)
-LOGGER = p_logging.DEFAULT_LOGGER
+DEFAULT_LOGGER = logging.getLogger('NULL')
+DEFAULT_LOGGER.addHandler(logging.NullHandler())
+
+#CONFIG = p_config.ProsperConfig(CONFIG_PATH)
+LOGGER = DEFAULT_LOGGER
+
+def build_default_logger(log_level='INFO'):
+    """set up defaults for logging
+
+    Args:
+        log_level (str): minimum logging level enum
+
+    Returns:
+        (:obj:`logging.logger`) default logger
+    """
+    log_path = path.join(HERE, 'installer.log')
+    logger = logging.getLogger('DiscordBot_installer')
+    formatter = logging.Formatter(
+        '[%(asctime)s;%(levelname)s;%(filename)s;%(funcName)s;%(lineno)s] %(message)s'
+    )
+    handler = logging.FileHandler(log_path)
+
+    handler.setFormatter(formatter)
+    handler.setLevel(log_level)
+    logger.addHandler(handler)
+
+    return logger
+
 
 class DiscordInstaller(cli.Application):
     """Installer for Prosper's DiscordBot"""
-    _log_builder = p_logging.ProsperLogging(
-        'DiscordInstaller',
-        HERE,
-        config_obj=CONFIG
-    )
+    _logger = build_default_logger()
     debug = cli.Flag(
         ['-d', '--debug'],
         help='Toggle debug mode: do not actually install services'
@@ -47,7 +74,13 @@ class DiscordInstaller(cli.Application):
         help='Enable verbose messaging')
     def enable_verbose(self):
         """toggle verbose logger"""
-        self._log_builder.configure_debug_logger()
+        debug_handler = logging.StreamHandler()
+        debug_formatter = logging.Formatter(
+            '[%(levelname)s:%(filename)s--%(funcName)s:%(lineno)s] %(message)s'
+        )
+        debug_handler.setFormatter(debug_formatter)
+        debug_handler.setLevel('DEBUG')
+        self._logger.addHandler(debug_handler)
 
     webhook_url = None
     @cli.switch(
@@ -71,7 +104,7 @@ class DiscordInstaller(cli.Application):
     @cli.switch(
         ['-c', '--config'],
         str,
-        help='Generic .cfg file to override bot .cfg file'
+        help='custom .cfg file to override bot .cfg file (DOES NOT AFFECT INSTALLER CONFIG)'
     )
     def set_config_override(self, config_override_path):
         """override the generic included config with a custom version"""
@@ -80,7 +113,7 @@ class DiscordInstaller(cli.Application):
     def main(self):
         """script logic goes here"""
         global LOGGER
-        LOGGER = self._log_builder.get_logger()
+        LOGGER = self._logger
 
 if __name__ == '__main__':
     DiscordInstaller.run()
