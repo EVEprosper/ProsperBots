@@ -6,7 +6,7 @@ from setuptools.command.test import test as TestCommand
 
 HERE = path.abspath(path.dirname(__file__))
 __version__ = '0.0.1'
-__project_name__ = 'bots'
+#__project_name__ = 'bots'
 
 def hack_find_packages(include_str):
     """patches setuptools.find_packages issue
@@ -57,7 +57,7 @@ class PyTest(TestCommand):
         TestCommand.initialize_options(self)
         self.pytest_args = [
             'Tests',
-            '--cov=prosper/' + __project_name__,
+            '--cov=prosper/',
             '--cov-report=term-missing'
         ]    #load defaults here
 
@@ -111,7 +111,7 @@ setup(
     ],
     tests_require=[
         'pytest~=3.0.0',
-
+        'pytest_cov~=2.4.0',
     ],
     cmdclass={
         'test':PyTest
