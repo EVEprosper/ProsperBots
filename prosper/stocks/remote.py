@@ -37,10 +37,13 @@ def get_news(
 ):
     """Fetch news from google
 
-    Note: google/yahoo disagree on some tickers swapping ./-
+    Note:
+        google/yahoo disagree on some tickers swapping ./-
+        uses demjson for parsing b/c google delivers bad JSON
 
     Args:
         ticker (str): stock ticker to evaluate
+        news_uri (str, optional): override for API endpoint
 
     Returns:
         (:obj:`dict`)
@@ -85,9 +88,6 @@ class RemoteException(Exception):
     pass
 class EmptyNewsEndpoint(RemoteException):
     """exception for alerting when news RSS/json returns nothing"""
-    pass
-class BadParseEndpoint(RemoteException):
-    """exception for wrapping demjson failure"""
     pass
 class EndpointDown(RemoteException):
     """wrapper for request errors, alert to stop parsing"""
