@@ -50,15 +50,15 @@ def get_config(config_path):
 CONFIG = get_config(path.join(HERE, 'test_stocks.cfg'))
 CACHE_PATH = path.join(HERE, 'cache')
 makedirs(CACHE_PATH, exist_ok=True)
-def test_cleanup_testdir():
-    """make sure paths are cleaned up"""
-    for path_info in CONFIG.items('CACHE'):
-        try:
-            nuke_path = path.join(CACHE_PATH, path_info[1])
-            remove(nuke_path)
-        except Exception:
-            #don't fail, just try to clean up paths
-            pass
+#def test_cleanup_testdir():
+#    """make sure paths are cleaned up"""
+#    for path_info in CONFIG.items('CACHE'):
+#        try:
+#            nuke_path = path.join(CACHE_PATH, path_info[1])
+#            remove(nuke_path)
+#        except Exception:
+#            #don't fail, just try to clean up paths
+#            pass
 
 def test_news_happypath():
     """test p_remote.get_news endpoint for happy-path"""
@@ -88,70 +88,6 @@ def test_news_emptyval():
     with pytest.raises(p_remote.EmptyNewsEndpoint):
         data = p_remote.get_news(test_ticker)
 
-## TODO: add sequence test
-CALENDAR_CACHE = TinyDB(
-    path.join(HERE, CONFIG.get('CACHE', 'calendar_cache'))
-)
-HAS_AUTH = True
-def test_tradier_happypath():
-    """test regular path for tradier calendar utility"""
-    if not CONFIG.get('AUTH', 'tradier_api'):
-        global HAS_AUTH
-        HAS_AUTH = False
-        pytest.skip('No API key given')
-    status = p_remote.market_open(
-        CONFIG.get('AUTH', 'tradier_api'),
-        cache_buster=False,
-        calendar_cache=CALENDAR_CACHE
-    )
-
-def test_tradier_cachepath():
-    """make sure cache-only fetch works"""
-    if not HAS_AUTH:
-        pytest.skip('no way to validate without API')
-
-    status = p_remote.market_open(
-        CONFIG.get('AUTH', 'tradier_api'),
-        cache_buster=True,
-        calendar_cache=CALENDAR_CACHE
-    )
-
-def test_validate_market_open_status():
-    """make sure cache/remote agree
-
-    NOTE: relies on happypath success
-    """
-    if not HAS_AUTH:
-        pytest.skip('No way to validate status')
-
-    remote_status = p_remote.market_open(
-        CONFIG.get('AUTH', 'tradier_api'),
-        cache_buster=True
-    )
-
-    cache_value = p_remote.check_calendar_cache(
-        CALENDAR_CACHE
-    )
-
-    cache_status = None
-    if cache_value == p_remote.MarketStatus.OPEN:
-        cache_staus = True
-    else:
-        cache_status = False
-
-    assert cache_status == remote_status
-
-def test_fail_tradier_fetch():
-    """force fetch_tradier_calendar to fail"""
-    if not HAS_AUTH:
-        pytest.skip('No way to validate without API')
-
-    with pytest.raises(Exception):
-        p_remote.fetch_tradier_calendar(
-            CONFIG.get('AUTH', 'tradier_api'),
-            endpoint_url='http://api.eveprosper.com/noendpoint'
-        )
-
 def overwrite_calendar_status(
         calendar_obj,
         new_value
@@ -167,82 +103,6 @@ def overwrite_calendar_status(
 
     return new_calendar
 
-def test_fail_calendar_parse():
-    """try to validate a bad config"""
-    if not HAS_AUTH:
-        pytest.skip('No way to validate without API')
-
-    ## Find out-of-range day
-    today = datetime.today()
-    today_str = today.strftime('%Y-%m-%d')
-    next_month = today + timedelta(days=31)
-    next_month_str = next_month.strftime('%Y-%m-%d')
-
-    ## Make a calendar with bad values
-    good_calendar = p_remote.fetch_tradier_calendar(
-        CONFIG.get('AUTH', 'tradier_api')
-    )
-    bad_calendar = overwrite_calendar_status(
-        good_calendar,
-        'GARBAGE'
-    )
-
-    with pytest.raises(p_remote.UnexpectedMarketStatus):
-        status = p_remote.parse_tradier_calendar(
-            bad_calendar,
-            today_str
-        )
-        #assert status == p_remote.MarketStatus.UNKNOWN
-
-    with pytest.raises(p_remote.UnexpectedMarketStatus):
-        status = p_remote.parse_tradier_calendar(
-            good_calendar,
-            next_month_str
-        )
-        #assert status == p_remote.MarketStatus.UNKNOWN
-
-def test_force_open_calendar():
-    """make sure we test "OPEN" path"""
-    if not HAS_AUTH:
-        pytest.skip('No way to validate without API')
-
-    today = datetime.today()
-    today_str = today.strftime('%Y-%m-%d')
-    good_calendar = p_remote.fetch_tradier_calendar(
-        CONFIG.get('AUTH', 'tradier_api')
-    )
-    open_calendar = overwrite_calendar_status(
-        good_calendar,
-        'open'
-    )
-
-    status = p_remote.parse_tradier_calendar(
-        open_calendar,
-        today_str
-    )
-    assert status == p_remote.MarketStatus.OPEN
-
-def test_force_closed_calendar():
-    """make sure we test "CLOSED" path"""
-    if not HAS_AUTH:
-        pytest.skip('No way to validate without API')
-
-    today = datetime.today()
-    today_str = today.strftime('%Y-%m-%d')
-    good_calendar = p_remote.fetch_tradier_calendar(
-        CONFIG.get('AUTH', 'tradier_api')
-    )
-    closed_calendar = overwrite_calendar_status(
-        good_calendar,
-        'closed'
-    )
-
-    status = p_remote.parse_tradier_calendar(
-        closed_calendar,
-        today_str
-    )
-    assert status == p_remote.MarketStatus.CLOSED
-
 def close_and_reopen_cache(
         tinydb_cache,
         path_to_cache
@@ -253,82 +113,206 @@ def close_and_reopen_cache(
     new_db = TinyDB(path_to_cache)
     return new_db
 
-def test_force_bad_cache():
-    """force bad cache into archive"""
-    if not HAS_AUTH:
-        pytest.skip('No way to validate without API')
-    global CALENDAR_CACHE
-    CALENDAR_CACHE = close_and_reopen_cache(
-        CALENDAR_CACHE,
-        path.join(HERE, CONFIG.get('CACHE', 'calendar_cache'))
-    )
+CALENDAR_CACHE_FILE = path.join(CACHE_PATH, CONFIG.get('CACHE', 'calendar_cache'))
+CALENDAR_CACHE = TinyDB(CALENDAR_CACHE_FILE)
 
-    good_calendar = p_remote.fetch_tradier_calendar(
-        CONFIG.get('AUTH', 'tradier_api')
-    )
-    bad_calendar = overwrite_calendar_status(
-        good_calendar,
-        'GARBAGE'
-    )
+@pytest.mark.incremental
+class TestTradierTools:
+    """wrapper for Tradier functions to test in a block
 
-    p_remote.update_calendar_cache(
-        CALENDAR_CACHE,
-        bad_calendar
-    )
+    Most rely on previous steps to complete correctly
+    """
+    def test_clear_cache(self):
+        """cleanup cache before testing"""
+        global CALENDAR_CACHE
+        CALENDAR_CACHE = close_and_reopen_cache(
+            CALENDAR_CACHE,
+            CALENDAR_CACHE_FILE
+        )
 
-    with pytest.raises(p_remote.UnexpectedMarketStatus):
+    def test_tradier_happypath(self):
+        """test regular path for tradier calendar utility"""
+        if len(CONFIG.get('AUTH', 'tradier_api')) == 0:
+            pytest.xfail('missing AUTH for Tradier API')
+        status = p_remote.market_open(
+            CONFIG.get('AUTH', 'tradier_api'),
+            cache_buster=False,
+            calendar_cache=CALENDAR_CACHE
+        )
+
+    def test_tradier_cachepath(self):
+        """make sure cache-only fetch works"""
+        status = p_remote.market_open(
+            CONFIG.get('AUTH', 'tradier_api'),
+            cache_buster=True,
+            calendar_cache=CALENDAR_CACHE
+        )
+
+    def test_validate_market_open_status(self):
+        """make sure cache/remote agree"""
+        remote_status = p_remote.market_open(
+            CONFIG.get('AUTH', 'tradier_api'),
+            cache_buster=True
+        )
+
+        cache_value = p_remote.check_calendar_cache(
+            CALENDAR_CACHE
+        )
+
+        cache_status = None
+        if cache_value == p_remote.MarketStatus.OPEN:
+            cache_staus = True
+        else:
+            cache_status = False
+
+        assert cache_status == remote_status
+
+    def test_fail_tradier_fetch(self):
+        """force fetch_tradier_calendar to fail"""
+        with pytest.raises(Exception):
+            p_remote.fetch_tradier_calendar(
+                CONFIG.get('AUTH', 'tradier_api'),
+                endpoint_url='http://api.eveprosper.com/noendpoint'
+            )
+
+    def test_fail_calendar_parse(self):
+        """try to validate a bad config"""
+        ## Find out-of-range day
+        today = datetime.today()
+        today_str = today.strftime('%Y-%m-%d')
+        next_month = today + timedelta(days=31)
+        next_month_str = next_month.strftime('%Y-%m-%d')
+
+        ## Make a calendar with bad values
+        good_calendar = p_remote.fetch_tradier_calendar(
+            CONFIG.get('AUTH', 'tradier_api')
+        )
+        bad_calendar = overwrite_calendar_status(
+            good_calendar,
+            'GARBAGE'
+        )
+
+        with pytest.raises(p_remote.UnexpectedMarketStatus):
+            status = p_remote.parse_tradier_calendar(
+                bad_calendar,
+                today_str
+            )
+            #assert status == p_remote.MarketStatus.UNKNOWN
+
+        with pytest.raises(p_remote.UnexpectedMarketStatus):
+            status = p_remote.parse_tradier_calendar(
+                good_calendar,
+                next_month_str
+            )
+            #assert status == p_remote.MarketStatus.UNKNOWN
+
+    def test_force_open_calendar(self):
+        """make sure we test "OPEN" path"""
+        today = datetime.today()
+        today_str = today.strftime('%Y-%m-%d')
+        good_calendar = p_remote.fetch_tradier_calendar(
+            CONFIG.get('AUTH', 'tradier_api')
+        )
+        open_calendar = overwrite_calendar_status(
+            good_calendar,
+            'open'
+        )
+
+        status = p_remote.parse_tradier_calendar(
+            open_calendar,
+            today_str
+        )
+        assert status == p_remote.MarketStatus.OPEN
+
+    def test_force_closed_calendar(self):
+        """make sure we test "CLOSED" path"""
+        today = datetime.today()
+        today_str = today.strftime('%Y-%m-%d')
+        good_calendar = p_remote.fetch_tradier_calendar(
+            CONFIG.get('AUTH', 'tradier_api')
+        )
+        closed_calendar = overwrite_calendar_status(
+            good_calendar,
+            'closed'
+        )
+
+        status = p_remote.parse_tradier_calendar(
+            closed_calendar,
+            today_str
+        )
+        assert status == p_remote.MarketStatus.CLOSED
+
+    def test_force_bad_cache(self):
+        """force bad cache into archive"""
+        global CALENDAR_CACHE
+        CALENDAR_CACHE = close_and_reopen_cache(
+            CALENDAR_CACHE,
+            CALENDAR_CACHE_FILE
+        )
+
+        good_calendar = p_remote.fetch_tradier_calendar(
+            CONFIG.get('AUTH', 'tradier_api')
+        )
+        bad_calendar = overwrite_calendar_status(
+            good_calendar,
+            'GARBAGE'
+        )
+
+        p_remote.update_calendar_cache(
+            CALENDAR_CACHE,
+            bad_calendar
+        )
+
+        with pytest.raises(p_remote.UnexpectedMarketStatus):
+            status = p_remote.check_calendar_cache(CALENDAR_CACHE)
+            print(status)
+
+    def test_force_open_cache(self):
+        """force cache to "OPEN" status"""
+        global CALENDAR_CACHE
+        CALENDAR_CACHE = close_and_reopen_cache(
+            CALENDAR_CACHE,
+            CALENDAR_CACHE_FILE
+        )
+
+        good_calendar = p_remote.fetch_tradier_calendar(
+            CONFIG.get('AUTH', 'tradier_api')
+        )
+        open_calendar = overwrite_calendar_status(
+            good_calendar,
+            'open'
+        )
+
+        p_remote.update_calendar_cache(
+            CALENDAR_CACHE,
+            open_calendar
+        )
+
         status = p_remote.check_calendar_cache(CALENDAR_CACHE)
-        print(status)
-def test_force_open_cache():
-    """force cache to "OPEN" status"""
-    if not HAS_AUTH:
-        pytest.skip('No way to validate without API')
-    global CALENDAR_CACHE
-    CALENDAR_CACHE = close_and_reopen_cache(
-        CALENDAR_CACHE,
-        path.join(HERE, CONFIG.get('CACHE', 'calendar_cache'))
-    )
 
-    good_calendar = p_remote.fetch_tradier_calendar(
-        CONFIG.get('AUTH', 'tradier_api')
-    )
-    open_calendar = overwrite_calendar_status(
-        good_calendar,
-        'open'
-    )
+        assert status == p_remote.MarketStatus.OPEN
 
-    p_remote.update_calendar_cache(
-        CALENDAR_CACHE,
-        open_calendar
-    )
+    def test_force_closed_cache(self):
+        """force cache to "CLOSED" status"""
+        global CALENDAR_CACHE
+        CALENDAR_CACHE = close_and_reopen_cache(
+            CALENDAR_CACHE,
+            CALENDAR_CACHE_FILE
+        )
 
-    status = p_remote.check_calendar_cache(CALENDAR_CACHE)
+        good_calendar = p_remote.fetch_tradier_calendar(
+            CONFIG.get('AUTH', 'tradier_api')
+        )
+        closed_calendar = overwrite_calendar_status(
+            good_calendar,
+            'closed'
+        )
 
-    assert status == p_remote.MarketStatus.OPEN
+        p_remote.update_calendar_cache(
+            CALENDAR_CACHE,
+            closed_calendar
+        )
 
-def test_force_closed_cache():
-    """force cache to "CLOSED" status"""
-    if not HAS_AUTH:
-        pytest.skip('No way to validate without API')
-    global CALENDAR_CACHE
-    CALENDAR_CACHE = close_and_reopen_cache(
-        CALENDAR_CACHE,
-        path.join(HERE, CONFIG.get('CACHE', 'calendar_cache'))
-    )
+        status = p_remote.check_calendar_cache(CALENDAR_CACHE)
 
-    good_calendar = p_remote.fetch_tradier_calendar(
-        CONFIG.get('AUTH', 'tradier_api')
-    )
-    closed_calendar = overwrite_calendar_status(
-        good_calendar,
-        'closed'
-    )
-
-    p_remote.update_calendar_cache(
-        CALENDAR_CACHE,
-        closed_calendar
-    )
-
-    status = p_remote.check_calendar_cache(CALENDAR_CACHE)
-
-    assert status == p_remote.MarketStatus.CLOSED
+        assert status == p_remote.MarketStatus.CLOSED
