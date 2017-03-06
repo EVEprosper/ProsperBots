@@ -8,6 +8,7 @@ import ujson as json
 import demjson
 import requests
 from tinydb import Query
+from six.moves.html_parser import HTMLParser
 
 from nltk import download
 import nltk.sentiment as sentiment
@@ -84,6 +85,72 @@ def get_news(
     #    raise err
 
     return demjson.decode(req.text)
+
+def parse_google_news(
+        news_obj,
+        filtered_sources=[]
+):
+    """crunching google news endpoint can be tricky
+
+    Args:
+        news_obj (:obj:`dict`): raw object off google endpoint
+        filtered_sources (:obj:`list` optional): sources to exclude
+
+    Returns:
+        (:obj:`list`) parsed and human-readable version of google news endpoint
+
+    """
+    articles = []
+    for row in news_obj['clusters']:
+        if int(row['id']) == -1:
+            continue #last entry is weird
+
+        for index, story in enumerate(row['a']):
+            try:
+                story_row = human_readable_article_data(
+                    story,
+                    index
+                )
+            except Exception as err_msg:
+                raise StoryParseKeyError(
+                    'Unable to parse article: ' +
+                    repr(err_msg)
+                )
+            articles.append(story_row)
+
+    return articles
+
+def human_readable_article_data(
+        news_story_row,
+        story_index=-1
+):
+    """switch story info into more readable format
+
+    Args:
+        news_story_row (:obj:`dict`): single row from google endpoint
+        story_index (int, optional): used for 'primary' keying
+    Returns:
+        (:obj:`dict`) reclassified and cleaned up object
+
+    """
+    article_row = {}
+    parser = HTMLParser()
+
+    article_row['source']   = news_story_row['s']
+    article_row['url']      = news_story_row['u']
+    article_row['title']    = parser.unescape(news_story_row['t'])
+    article_row['blurb']    = parser.unescape(news_story_row['sp'])
+    article_row['usg']      = news_story_row['usg'] #not sure if UUID is useful?
+    article_row['datetime'] = datetime.\
+        fromtimestamp(int(news_story_row['tt'])).\
+        strftime('%Y-%m-%d %H:%M:%S')
+    article_row['primary'] = False
+    if story_index == 0:
+        article_row['primary'] = True
+    return article_row
+    #Unused keys:
+    #story_info['sru']  google reference link
+    #story_info['d']    human-readable "when published" info
 
 class MarketStatus(Enum):
     """enum for tracking market status"""
@@ -312,4 +379,7 @@ class EndpointDown(RemoteException):
     pass
 class UnexpectedMarketStatus(RemoteException):
     """exception for alerting when market calendar reaches unknown state"""
+    pass
+class StoryParseKeyError(RemoteException):
+    """exception for alerting when processing news articles fails"""
     pass

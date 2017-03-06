@@ -107,7 +107,8 @@ setup(
         'discord.py~=0.13.0',
         'nltk~=3.2.1',
         'pandas-datareader~=0.2.1',
-        'slackbot~=0.4.1'
+        'slackbot~=0.4.1',
+        'six~=1.10.0'
     ],
     tests_require=[
         'pytest~=3.0.0',
