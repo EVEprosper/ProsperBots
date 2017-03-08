@@ -359,6 +359,150 @@ class TestNLTKTools:
         assert data['title']['compound'] > 0
         assert data['blurb']['compound'] < 0
 
+    def test_unformatted_article_vader(self):
+        """make sure we can parse both pretty/ugly articles for vader"""
+        test_article = {
+            's': 'source',
+            'u': 'url',
+            't': self.DEMO_OBJ['title'],
+            'sp': self.DEMO_OBJ['blurb'],
+            'usg': 'usg',
+            'tt': datetime.utcnow().timestamp()
+        }
+
+        data = p_remote.grade_articles_vader(test_article)
+
+        assert data['title']['compound'] > 0
+        assert data['blurb']['compound'] < 0
+
 class TestGoogleArticles:
-    pass
+    TEST_TIME = datetime.utcnow().timestamp()
+    TEST_ARTICLE = {
+        's': 'source',
+        'u': 'url',
+        't': 'title',
+        'sp': 'blurb',
+        'usg': 'usg',
+        'tt': TEST_TIME
+    }
+    def test_fetch_good_article(self):
+        """try to fetch and parse production data"""
+        ticker = 'GOOGL'
+        articles = p_remote.get_news(ticker)
+
+        formatted = p_remote.parse_google_news(articles)
+
+        for article in formatted:
+            assert 'source' in article
+            assert 'url' in article
+            assert 'title' in article
+            assert 'blurb' in article
+            assert 'usg' in article
+            assert 'datetime' in article
+            assert 'primary' in article
+
+            assert isinstance(article['primary'], bool)
+
+            assert 'data' not in article
+
+    def test_fetch_good_article_sentiment(self):
+        """try to fetch and parse production data"""
+        ticker = 'AAPL'
+        articles = p_remote.get_news(ticker)
+
+        formatted = p_remote.parse_google_news(articles, do_sentiment=True)
+
+        for article in formatted:
+            assert 'source' in article
+            assert 'url' in article
+            assert 'title' in article
+            assert 'blurb' in article
+            assert 'usg' in article
+            assert 'datetime' in article
+            assert 'primary' in article
+
+            assert isinstance(article['primary'], bool)
+
+            assert 'data' in article
+
+            vader_keys = ['compound', 'neg', 'neu', 'pos']
+            for vader_key in vader_keys:
+                assert vader_key in article['data']['title']
+                assert vader_key in article['data']['blurb']
+
+    def test_filtered_sources(self):
+        """make sure filtered sources aren't included in report"""
+        filtered_sources = ['Yahoo Finance']
+
+        ticker = 'A'
+        articles = p_remote.get_news(ticker)
+
+        formatted = p_remote.parse_google_news(articles)
+        formatted_filtered = p_remote.parse_google_news(
+            articles,
+            filtered_sources=filtered_sources
+        )
+
+        all_sources = []
+        for article in formatted:
+            all_sources.append(article['source'])
+
+        filtered = []
+        for article in formatted_filtered:
+            filtered.append(article['source'])
+
+        for source in filtered_sources:
+            assert source in all_sources
+            assert source not in filtered
+
+    def test_human_parser(self):
+        """validate output from human_readable_article_data"""
+        parsed_article = p_remote.human_readable_article_data(self.TEST_ARTICLE)
+
+        assert parsed_article['source']   == self.TEST_ARTICLE['s']
+        assert parsed_article['url']      == self.TEST_ARTICLE['u']
+        assert parsed_article['title']    == self.TEST_ARTICLE['t']
+        assert parsed_article['blurb']    == self.TEST_ARTICLE['sp']
+        assert parsed_article['usg']      == self.TEST_ARTICLE['usg']
+        #assert parsed_article['datetime'] == self.TEST_ARTICLE['tt']
+        assert parsed_article['primary'] == False
+
+    def test_human_parser_primrary(self):
+        """validate output from human_readable_article_data"""
+        parsed_article = p_remote.human_readable_article_data(self.TEST_ARTICLE, 0)
+
+        assert parsed_article['primary']
+
+    def test_bad_parse(self):
+        """make sure bad parsing throws proper exception"""
+        bad_article = self.TEST_ARTICLE
+        bad_article.pop('s', None)
+        bad_article['id'] = 1
+
+        bad_feed = {}
+        bad_feed['clusters'] = []
+        test_block = {
+            'id': 1,
+            'a': [bad_article]
+        }
+        bad_feed['clusters'].append(test_block)
+        bad_feed['clusters'].append({
+            'id': -1,
+            'a':[]
+        })
+
+        with pytest.raises(p_remote.StoryParseKeyError):
+            articles = p_remote.parse_google_news(bad_feed)
+
+    def test_bad_grade(self):
+        """make sure we can catch vader failures"""
+        ticker = 'MU'
+        articles = p_remote.get_news(ticker)
+
+        p_remote.LOADED_LEXICONS = []
+
+        with pytest.raises(p_remote.NLTKLibraryNotLoaded):
+            formatted = p_remote.parse_google_news(articles, do_sentiment=True)
+
+
 
