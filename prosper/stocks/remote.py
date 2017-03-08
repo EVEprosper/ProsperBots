@@ -102,13 +102,15 @@ def get_news(
 
 def parse_google_news(
         news_obj,
-        filtered_sources=[]
+        filtered_sources=[],
+        do_sentiment=False
 ):
     """crunching google news endpoint can be tricky
 
     Args:
         news_obj (:obj:`dict`): raw object off google endpoint
         filtered_sources (:obj:`list` optional): sources to exclude
+        do_sentiment (bool): if sentiment analysis should be attempted
 
     Returns:
         (:obj:`list`) parsed and human-readable version of google news endpoint
@@ -130,6 +132,16 @@ def parse_google_news(
                     'Unable to parse article: ' +
                     repr(err_msg)
                 )
+            if story_row['source'] in filtered_sources:
+                continue
+
+            if do_sentiment:
+                try:
+                    data = grade_articles_vader(story_row)
+                    story_row['data'] = data
+                except Exception as err_msg:
+                    raise
+
             articles.append(story_row)
 
     return articles
@@ -167,7 +179,7 @@ def human_readable_article_data(
     #story_info['d']    human-readable "when published" info
 
 def grade_articles_vader(
-    article_row
+        article_row
 ):
     """go over text data to grade entries with vader sentiment analyzer
 

@@ -161,7 +161,7 @@ class TestTradierTools:
 
         cache_status = None
         if cache_value == p_remote.MarketStatus.OPEN:
-            cache_staus = True
+            cache_status = True
         else:
             cache_status = False
 
@@ -317,3 +317,48 @@ class TestTradierTools:
         status = p_remote.check_calendar_cache(CALENDAR_CACHE)
 
         assert status == p_remote.MarketStatus.CLOSED
+
+@pytest.mark.incremental
+class TestNLTKTools:
+    """wrapper to test NLTK helpers"""
+    DEMO_OBJ = {
+        'title': 'Marry liked her dog very much',
+        'blurb': 'Marry\'s dog hates bees'
+    }
+    def test_nltk_unloaded(self):
+        """make sure unloaded exception works (ORDER COUNTS)"""
+
+        with pytest.raises(p_remote.NLTKLibraryNotLoaded):
+            data = p_remote.grade_articles_vader(self.DEMO_OBJ)
+
+    def test_init_nltk_happypath(self):
+        """try regular path init NLTK operation"""
+        assert 'vader_lexicon' not in p_remote.LOADED_LEXICONS #should be empty
+
+        assert p_remote.init_nltk('vader_lexicon')
+
+        assert 'vader_lexicon' in p_remote.LOADED_LEXICONS
+
+    def test_init_nltk_repeat(self):
+        """try overload situation"""
+        assert 'vader_lexicon' in p_remote.LOADED_LEXICONS
+
+        assert p_remote.init_nltk('vader_lexicon')
+
+    def test_init_nltk_badlib(self):
+        """try to download a bad library"""
+        with pytest.raises(p_remote.NLTKLibraryDownloadFail):
+            data = p_remote.init_nltk('definitely_a_fake_lib') == False
+
+        assert 'definitely_a_fake_lib' not in p_remote.LOADED_LEXICONS
+
+    def test_vader(self):
+        """make sure we can grade using vader"""
+        data = p_remote.grade_articles_vader(self.DEMO_OBJ)
+
+        assert data['title']['compound'] > 0
+        assert data['blurb']['compound'] < 0
+
+class TestGoogleArticles:
+    pass
+
