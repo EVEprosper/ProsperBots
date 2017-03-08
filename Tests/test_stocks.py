@@ -311,7 +311,8 @@ class TestTradierTools:
         p_remote.update_calendar_cache(
             CALENDAR_CACHE,
             closed_calendar
-        )
+        );
+
 
         status = p_remote.check_calendar_cache(CALENDAR_CACHE)
 

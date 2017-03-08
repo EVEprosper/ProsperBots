@@ -20,6 +20,7 @@ DEFAULT_LOGGER = p_logging.DEFAULT_LOGGER
 
 HERE = path.abspath(path.dirname(__file__))
 
+LOADED_LEXICONS = []
 def init_nltk(lexicon_name):
     """Make sure we can load the proper NLTK dependencies at load-time
 
@@ -31,7 +32,20 @@ def init_nltk(lexicon_name):
         (bool): pass/fail
 
     """
-    return download(lexicon_name)
+    global LOADED_LEXICONS
+
+    if lexicon_name in LOADED_LEXICONS:
+        #lexicon already loaded
+        return True
+
+    status = download(lexicon_name)
+
+    if status:
+        LOADED_LEXICONS.append(lexicon_name)
+    else:
+        raise NLTKLibraryDownloadFail('Unable to load lexicon: ' + lexicon_name)
+
+    return status
 
 NEWS_URI = 'https://www.google.com/finance/company_news'
 def get_news(
@@ -151,6 +165,39 @@ def human_readable_article_data(
     #Unused keys:
     #story_info['sru']  google reference link
     #story_info['d']    human-readable "when published" info
+
+def grade_articles_vader(
+    article_row
+):
+    """go over text data to grade entries with vader sentiment analyzer
+
+    Args:
+        article_row (:obj:`dict`): single article entry
+
+    Returns:
+        (:obj:`dict`) data section with graded segments
+
+    """
+    if 'vader_lexicon' not in LOADED_LEXICONS:
+        raise NLTKLibraryNotLoaded('vader_lexicon not loaded yet')
+
+    article_title = ''
+    article_blurb = ''
+    try:
+        article_title = article_row['title']
+        article_blurb = article_row['blurb']
+    except KeyError:
+        article_row = human_readable_article_data(article_row)
+        article_title = article_row['title']
+        article_blurb = article_row['blurb']
+
+    text_analyzer = sentiment.vader.SentimentIntensityAnalyzer()
+    data = {}
+    data['title'] = text_analyzer.polarity_scores(article_title)
+    data['blurb'] = text_analyzer.polarity_scores(article_blurb)
+
+    return data
+
 
 class MarketStatus(Enum):
     """enum for tracking market status"""
@@ -370,6 +417,12 @@ def update_calendar_cache(
 
 class RemoteException(Exception):
     """base exception class for remote modules"""
+    pass
+class NLTKLibraryDownloadFail(Exception):
+    """unable to load requested Lexicon"""
+    pass
+class NLTKLibraryNotLoaded(Exception):
+    """required library not loaded"""
     pass
 class EmptyNewsEndpoint(RemoteException):
     """exception for alerting when news RSS/json returns nothing"""
