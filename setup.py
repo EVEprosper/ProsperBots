@@ -118,7 +118,7 @@ setup(
     },
     install_requires=[
         'ProsperCommon~=1.1.0',
-        'ProsperDatareader[nltk]~=1.0.1',
+        'ProsperDatareader[nltk]~=1.1.1',
         'tinydb~=3.4.1',
         'tinymongo~=0.1.9',
         'discord.py~=0.16.10',
