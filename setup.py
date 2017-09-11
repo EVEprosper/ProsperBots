@@ -8,7 +8,7 @@ from setuptools.command.test import test as TestCommand
 
 HERE = path.abspath(path.dirname(__file__))
 __package_name__ = 'ProsperBots'
-__library_name__ = 'bots'
+__library_name__ = 'prosper_bots'
 
 def get_version(package_name):
     """find __version__ for making package

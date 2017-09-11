@@ -1,26 +1,40 @@
 """prosper_slackbot.py: main method for slackbot"""
 from os import path
+import platform
+import re
 
-import slackbot
+import slackbot.bot
 from plumbum import cli
 
-import prosper_bots
 import prosper.common.prosper_logging as p_logging
 import prosper.common.prosper_config as p_config
 
+## TODO: need more path than expected?
+from prosper_bots._version import __version__
+import prosper_bots.config as api_config
+
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
+PROGNAME = 'ProsperSlackBot'
 
+@slackbot.bot.respond_to('VERSION')
+def which_prosperbot(message):
+    """echo deployment info"""
+    message.send('{} -- {} -- {}'.format(
+        PROGNAME,
+        __version__,
+        platform.node()
+    ))
 
 class ProsperSlackBot(cli.Application):
     """wrapper for slackbot Main()"""
-    PROGNAME = 'ProsperSlackBot'
-    VERSION = prosper_bots._version.__version__
+    PROGNAME = PROGNAME
+    VERSION = __version__
 
     _log_builder = p_logging.ProsperLogger(
         PROGNAME,
         '/var/logs/prosper',
-        config=CONFIG
+        config_obj=CONFIG
     )
 
     debug = cli.Flag(
@@ -38,6 +52,12 @@ class ProsperSlackBot(cli.Application):
         logger = self._log_builder.logger
 
         logger.info('Hello World')
+        api_config.LOGGER = logger
+        api_config.CONFIG = CONFIG
+
+        logger.error('STARTING PROSPERBOT -- SLACK %s', platform.node())
+        bot = slackbot.bot.Bot()
+        bot.run()
 
 if __name__ == '__main__':
     ProsperSlackBot.run()
