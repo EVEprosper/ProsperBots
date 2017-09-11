@@ -19,9 +19,14 @@ CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
 PROGNAME = 'ProsperSlackBot'
 PP = pprint.PrettyPrinter(indent=2)
 
-@slackbot.bot.respond_to('VERSION')
+@slackbot.bot.respond_to('version', re.IGNORECASE)
 def which_prosperbot(message):
     """echo deployment info"""
+    api_config.LOGGER.info(
+        '@%s -- Version Info -- %s',
+        message._client.users[message._body['user']]['name'],
+        __version__
+    )
     message.send('{} -- {} -- {}'.format(
         PROGNAME,
         __version__,
@@ -31,12 +36,12 @@ def which_prosperbot(message):
 @slackbot.bot.listen_to(r'`\$(.*)`')
 def generic_stock_info(message, ticker):
     """echo basic info about stock"""
-
-    PP.pprint(message._body)
     api_config.LOGGER.info(
-        'Basic company info -- %s -- @%s',
-        ticker.upper(),
-        message._client.users[message._body['user']]['name'])
+        '@%s -- Basic company info -- %s',
+        message._client.users[message._body['user']]['name'],
+        ticker.upper()
+    )
+
     message.send(ticker)
 
 class ProsperSlackBot(cli.Application):
