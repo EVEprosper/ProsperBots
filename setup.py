@@ -124,6 +124,7 @@ setup(
         'tinymongo~=0.1.9',
         'discord.py~=0.16.10',
         'slackbot~=0.5.1',
+        'plumbum~=1.6.3',
         'pandas~=0.20.3',
         'plotnine~=0.2.1'
     ],
