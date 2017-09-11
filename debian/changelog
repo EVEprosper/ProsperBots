@@ -1,0 +1,7 @@
+prosper-bots (0.9.0) stable; urgency=low
+
+  * Initial release
+  * Adding Slack to bot coverage (slackbot)
+  * Adding Discord to bot coverage (discord.py)
+
+ -- John Purcell <jpurcell.ee@gmail.com>  TBD

@@ -1,0 +1,13 @@
+#!/bin/bash
+echo 'RUNNING POST INSTALL FOR prosper-bots'
+
+echo '--installing services'
+for service in /opt/venvs/prosper-bots/services/*
+do
+    echo $service
+    systemctl stop $(basename $service)
+    cp -f $service /lib/systemd/system/
+    systemctl enable $(basename $service)
+    systemctl start $(basename $service)
+done
+systemctl daemon-reload
