@@ -2,6 +2,7 @@
 from os import path
 import platform
 import re
+import pprint
 
 import slackbot.bot
 from plumbum import cli
@@ -16,6 +17,7 @@ import prosper_bots.config as api_config
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
 PROGNAME = 'ProsperSlackBot'
+PP = pprint.PrettyPrinter(indent=2)
 
 @slackbot.bot.respond_to('VERSION')
 def which_prosperbot(message):
@@ -25,6 +27,17 @@ def which_prosperbot(message):
         __version__,
         platform.node()
     ))
+
+@slackbot.bot.listen_to(r'`\$(.*)`')
+def generic_stock_info(message, ticker):
+    """echo basic info about stock"""
+
+    PP.pprint(message._body)
+    api_config.LOGGER.info(
+        'Basic company info -- %s -- @%s',
+        ticker.upper(),
+        message._client.users[message._body['user']]['name'])
+    message.send(ticker)
 
 class ProsperSlackBot(cli.Application):
     """wrapper for slackbot Main()"""
