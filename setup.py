@@ -109,12 +109,13 @@ setup(
     packages=find_packages(__library_name__),
     include_package_data=True,
     data_files=[
-        ('Tests', include_all_subfiles('Tests')),
-        ('Docs', include_all_subfiles('Docs')),
-        ('Scripts', include_all_subfiles('Scripts'))
+        ('tests', include_all_subfiles('tests')),
+        ('docs', include_all_subfiles('docs')),
+        ('scripts', include_all_subfiles('scripts'))
     ],
     package_data={
-
+        '': ['LICENSE', 'README.rst'],
+        'prosper-bots': ['version.txt']
     },
     install_requires=[
         'ProsperCommon~=1.1.0',
