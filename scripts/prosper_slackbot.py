@@ -6,6 +6,7 @@ import pprint
 
 import slackbot.bot
 from plumbum import cli
+from contexttimer import Timer
 
 import prosper.common.prosper_logging as p_logging
 import prosper.common.prosper_config as p_config
@@ -13,6 +14,8 @@ import prosper.common.prosper_config as p_config
 ## TODO: need more path than expected?
 from prosper_bots._version import __version__
 import prosper_bots.config as api_config
+import prosper_bots.utils as utils
+import prosper_bots.connections as connections
 
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
@@ -36,13 +39,37 @@ def which_prosperbot(message):
 @slackbot.bot.listen_to(r'`\$(.*)`')
 def generic_stock_info(message, ticker):
     """echo basic info about stock"""
+    ticker = ticker.upper()
     api_config.LOGGER.info(
         '@%s -- Basic company info -- %s',
         message._client.users[message._body['user']]['name'],
-        ticker.upper()
+        ticker
     )
+    if connections.cooldown(
+            'BASIC-{}'.format(ticker),
+            logger=api_config.LOGGER
+    ):
+        api_config.LOGGER.info('--CALLED TOO QUICKLY: shutting up')
+        return
 
-    message.send(ticker)
+    with Timer() as basic_quote_timer:
+        try:
+            data = utils.get_basic_ticker_info(
+                ticker.upper(),
+                ['company_name', 'price', 'change_pct'],
+                logger=api_config.LOGGER
+            )
+        except Exception:
+            api_config.LOGGER.error(
+                'Unexpected get_basic_ticker_info() failure',
+                exc_info=True
+            )
+            data = ''
+        api_config.LOGGER.info('--basic_quote_timer=%s', basic_quote_timer)
+
+    if data:  # only emit if there is data
+        api_config.LOGGER.debug(data)
+        message.send(data)
 
 class ProsperSlackBot(cli.Application):
     """wrapper for slackbot Main()"""
