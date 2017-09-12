@@ -1,10 +1,13 @@
 """connections.py: database and cache utilities for bot commands"""
 from os import path
 import time
+#from datetime import datetime, timedelta
 
 from tinymongo import TinyMongoClient
+import pandas as pd
 
 import prosper_bots.config as api_config
+import prosper.datareader.coins.info as info
 
 HERE = path.abspath(path.dirname(__file__))
 CONN = TinyMongoClient(path.join(HERE, 'cache'))['prosper']
@@ -49,3 +52,50 @@ def cooldown(
     })
 
     return False
+
+COINS_COLLECTION = 'coins'
+def check_coins(
+        ticker,
+        cache_buster=False,
+        cache_age=86400,
+        coins_collection=COINS_COLLECTION,
+        logger=api_config.LOGGER
+):
+    """checks if ticker is a crypto-coin
+
+    Args:
+        ticker (str): name of product to check
+        cache_buster (bool, optional): skip cache
+        logger (:obj:`logging.logger`, optional): logging handle
+
+    Returns:
+        (bool): coin or not
+
+    """
+    cache_time = time.time()
+
+    logger.info('--checking cache for %s', ticker)
+    cached_data = list(CONN[coins_collection].find(
+        {'cache_time': {'$gt': cache_time - cache_age}}
+    ))
+
+    coins_list = []
+    if not cached_data or cache_buster:
+        ## Refresh cache ##
+        logger.info('--fetching coin info')
+        coins_list = info.supported_symbol_info('commodity')
+        coins_df = pd.DataFrame(coins_list, columns=['coin_ticker'])
+        coins_df['cache_time'] = cache_time
+        coin_cache = list(coins_df.to_dict(orient='records'))
+
+        logger.info('--clearing cache')
+        CONN[coins_collection].delete_many({})
+
+        CONN[coins_collection].insert_many(coin_cache)
+
+    else:
+        logger.info('--reading cached values')
+        coins_df = pd.DataFrame(cached_data)
+        coins_list = list(coins_df['coin_ticker'])
+
+    return ticker in coins_list
