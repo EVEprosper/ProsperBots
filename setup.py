@@ -127,7 +127,7 @@ setup(
         'plumbum~=1.6.3',
         'pandas~=0.20.3',
         'pandas_datareader~=0.5.0',
-        #'requests-cache~=0.4.13',
+        'requests-cache~=0.4.13',
         'contexttimer~=0.3.3',
         'plotnine~=0.2.1'
     ],

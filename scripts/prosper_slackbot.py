@@ -57,7 +57,7 @@ def generic_stock_info(message, ticker):
         try:
             data = utils.get_basic_ticker_info(
                 ticker.upper(),
-                ['company_name', 'price', 'change_pct'],
+                ['company_name', 'last', 'change_pct'],
                 logger=api_config.LOGGER
             )
         except Exception:
@@ -70,7 +70,7 @@ def generic_stock_info(message, ticker):
 
     if data:  # only emit if there is data
         api_config.LOGGER.debug(data)
-        message.send(data)
+        message.send('`' + data + '`')
 
 class ProsperSlackBot(cli.Application):
     """wrapper for slackbot Main()"""
