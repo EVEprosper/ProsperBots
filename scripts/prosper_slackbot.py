@@ -3,10 +3,12 @@ from os import path
 import platform
 import re
 import pprint
+import json
 
 import slackbot.bot
 from plumbum import cli
 from contexttimer import Timer
+import requests
 
 import prosper.common.prosper_logging as p_logging
 import prosper.common.prosper_config as p_config

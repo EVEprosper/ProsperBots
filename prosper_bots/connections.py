@@ -91,6 +91,7 @@ def check_coins(
         logger.info('--clearing cache')
         CONN[coins_collection].delete_many({})
 
+        logger.info('--rebuilding cache')
         CONN[coins_collection].insert_many(coin_cache)
 
     else:
