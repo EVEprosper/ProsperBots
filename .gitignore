@@ -87,7 +87,7 @@ venv*/
 *_local.cfg
 
 # cache files
-cache/
+cache/*.json
 
 # Spyder project settings
 .spyderproject

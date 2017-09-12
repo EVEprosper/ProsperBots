@@ -6,7 +6,8 @@ from tinymongo import TinyMongoClient
 
 import prosper_bots.config as api_config
 
-CONN = TinyMongoClient('cache')['prosper']
+HERE = path.abspath(path.dirname(__file__))
+CONN = TinyMongoClient(path.join(HERE, 'cache'))['prosper']
 COOLDOWN_COLLECTION = 'cooldown'
 def cooldown(
         element_name,
