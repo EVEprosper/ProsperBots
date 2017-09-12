@@ -47,6 +47,7 @@ def generic_stock_info(message, ticker):
     )
     if connections.cooldown(
             'BASIC-{}'.format(ticker),
+            cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
             logger=api_config.LOGGER
     ):
         api_config.LOGGER.info('--CALLED TOO QUICKLY: shutting up')
