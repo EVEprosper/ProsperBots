@@ -2,8 +2,8 @@
 from os import path
 from enum import Enum
 import time
-import requests_cache
 
+import requests_cache
 import pandas_datareader as pd_reader
 
 import prosper.datareader.stocks as p_stocks
@@ -34,6 +34,7 @@ def get_basic_ticker_info(
         ticker,
         feed_elements,
         cache_time=30,
+        session=SESSION,
         source=Sources.pandas,  # TODO
         logger=api_config.LOGGER
 ):
@@ -42,6 +43,7 @@ def get_basic_ticker_info(
     Args:
         ticker (str): name of product
         feed_elements (:obj:`list`): list of stuff to return
+        session (:obj:`requests_cache.CachedSession`, optional): requests_cache
         source (:obj:`Enum`): enumerated Sources()
         logger (:obj:`logging.logger`, optional): logging hanlde
 
@@ -49,19 +51,22 @@ def get_basic_ticker_info(
         (str): response for message
 
     """
-    return 'IN PROGRESS - {}'.format(ticker)
-    data = None
-    try:
-        logger.info('--fetching quote data from yahoo')
+    #return 'IN PROGRESS - {}'.format(ticker)
+    logger.info('--fetching quote data from yahoo')
+    data = pd_reader.get_quote_yahoo(
+        ticker,
+        session
+    )
+
+    if data.get_value(ticker, 'company_name') == 'N/A':
+        logger.info('--ticker not found, trying coins')
         data = pd_reader.get_quote_yahoo(
-            ticker,
-            SESSION
-        )
-    except Exception:
-        logger.warning(
-            'Unable to resolve ticker %s -- YAHOO',
-            ticker,
-            exc_info=True
+            ticker + 'USD=X',
+            session
         )
 
+    if data.get_value(ticker, 'company_name') == 'N/A':
+        logger.warning('--unable to resolve ticker %s', ticker)
+        return ''
 
+    return ' '.join(list(data.loc[ticker, feed_elements]))
