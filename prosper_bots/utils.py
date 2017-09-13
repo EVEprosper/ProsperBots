@@ -6,17 +6,14 @@ import time
 import requests_cache
 import pandas_datareader as pd_reader
 
-import prosper.datareader.stocks as p_stocks
-import prosper.datareader.coins as p_coins
+import prosper.datareader.stocks as stocks
+import prosper.datareader.coins as coins
 
 import prosper_bots.config as api_config
 #import prosper_bots.connections as connections
 
 HERE = path.abspath(path.dirname(__file__))
-#SESSION = requests_cache.CachedSession(
-#    backend='memory',
-#    expire_after=3600
-#)
+
 ## Monkey patches ##
 pd_reader.yahoo.quotes._yahoo_codes = {
     **pd_reader.yahoo.quotes._yahoo_codes,
@@ -34,7 +31,6 @@ def get_basic_ticker_info(
         ticker,
         feed_elements,
         cache_time=30,
-        #session=SESSION,
         source=Sources.pandas,  # TODO
         logger=api_config.LOGGER
 ):
@@ -43,7 +39,6 @@ def get_basic_ticker_info(
     Args:
         ticker (str): name of product
         feed_elements (:obj:`list`): list of stuff to return
-        session (:obj:`requests_cache.CachedSession`, optional): requests_cache
         source (:obj:`Enum`): enumerated Sources()
         logger (:obj:`logging.logger`, optional): logging hanlde
 
@@ -52,22 +47,12 @@ def get_basic_ticker_info(
 
     """
     #return 'IN PROGRESS - {}'.format(ticker)
-    logger.info('--fetching quote data from yahoo')
-    data = pd_reader.get_quote_yahoo(
-        ticker,
-        #session
-    )
+    logger.info('--fetching quote data from robinhood: %s', ticker)
+    try:
+        data = stocks.prices.get_quote_rh(ticker)
+    except Exception:
+        logger.warning('--ticker not found: %s', ticker, exc_info=True)
+        return ''
 
-    if data.get_value(ticker, 'company_name') == 'N/A':
-        coin = ticker + 'USD=X'
-        logger.info('--ticker not found, trying coin %s', coin)
-        data = pd_reader.get_quote_yahoo(
-            coin,
-            #session
-        )
-        ticker = coin
-        if data.get_value(coin, 'company_name') == 'N/A':
-            logger.warning('--unable to resolve ticker %s', ticker)
-            return ''
-
-    return ' '.join(list(map(str, data.loc[ticker, feed_elements])))
+    logger.debug(data)
+    return ' '.join(list(map(str, data.loc[0, feed_elements])))

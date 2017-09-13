@@ -59,7 +59,8 @@ def generic_stock_info(message, ticker):
         try:
             data = utils.get_basic_ticker_info(
                 ticker.upper(),
-                ['company_name', 'last', 'change_pct'],
+                ['name', 'current_price', 'change_pct'],
+                #['company_name', 'last', 'change_pct'],
                 logger=api_config.LOGGER
             )
         except Exception:
@@ -104,8 +105,11 @@ class ProsperSlackBot(cli.Application):
         api_config.CONFIG = CONFIG
 
         logger.error('STARTING PROSPERBOT -- SLACK %s', platform.node())
-        bot = slackbot.bot.Bot()
-        bot.run()
+        try:
+            bot = slackbot.bot.Bot()
+            bot.run()
+        except Exception:
+            logger.critical('Going down in flames!', exc_info=True)
 
 if __name__ == '__main__':
     ProsperSlackBot.run()
