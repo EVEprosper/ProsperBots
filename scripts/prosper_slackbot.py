@@ -22,6 +22,7 @@ import prosper_bots.connections as connections
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
 PROGNAME = 'ProsperSlackBot'
+CONN = connections.build_connection('slackbot')
 PP = pprint.PrettyPrinter(indent=2)
 
 @slackbot.bot.respond_to('version', re.IGNORECASE)
@@ -49,6 +50,7 @@ def generic_stock_info(message, ticker):
     )
     if connections.cooldown(
             'BASIC-{}'.format(ticker),
+            CONN,
             cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
             logger=api_config.LOGGER
     ):

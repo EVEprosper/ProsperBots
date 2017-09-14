@@ -10,11 +10,31 @@ import prosper_bots.config as api_config
 import prosper.datareader.coins.info as info
 
 HERE = path.abspath(path.dirname(__file__))
-CONN = TinyMongoClient(path.join(HERE, 'cache'))['prosper']
+
+def build_connection(
+        source_name,
+        source_path=path.join(HERE, 'cache'),
+        logger=api_config.LOGGER
+):
+    """create a connection object for a bot main() to reference
+
+    Args:
+        source_name (str): name of db
+        source_path (str, optional): path to db
+        logger (:obj:`logging.logger`, optional): logging handle
+
+    Returns:
+        (:obj:`tinymongo.TinyMongoDatabase`): handle to database
+
+    """
+    logger.info('Building db connection: %s', path.join(source_path, source_name + '.json'))
+
+    return TinyMongoClient(source_path)[source_name]
 
 COOLDOWN_COLLECTION = 'cooldown'
 def cooldown(
         element_name,
+        db_conn,
         cooldown_time=30,
         cooldown_collection=COOLDOWN_COLLECTION,
         logger=api_config.LOGGER
@@ -23,6 +43,7 @@ def cooldown(
 
     Args:
         element_name (str): name of element (usually "SOURCE-THING")
+        db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
         cooldown_time (int, optional): time to shut up (seconds)
         cooldown_collection (str, optional): name of collection to track cache
         logger (:obj:`logging.logger`, optional): logging handle
@@ -34,7 +55,7 @@ def cooldown(
 
     """
     logger.info('--checking cooldown cache for %s', element_name)
-    cache_element = CONN[cooldown_collection].find_one({'element_name': element_name})
+    cache_element = db_conn[cooldown_collection].find_one({'element_name': element_name})
 
     sleep_time = cooldown_time
     if cache_element:
@@ -45,8 +66,8 @@ def cooldown(
         return True
 
     logger.info('--cleaning up cooldown cache')
-    CONN[cooldown_collection].delete_many({'element_name': element_name})
-    CONN[cooldown_collection].insert_one({
+    db_conn[cooldown_collection].delete_many({'element_name': element_name})
+    db_conn[cooldown_collection].insert_one({
         'element_name': element_name,
         'time': time.time()
     })
@@ -56,6 +77,7 @@ def cooldown(
 COINS_COLLECTION = 'coins'
 def check_coins(
         ticker,
+        db_conn,
         cache_buster=False,
         cache_age=86400,
         coins_collection=COINS_COLLECTION,
@@ -65,6 +87,7 @@ def check_coins(
 
     Args:
         ticker (str): name of product to check
+        db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
         cache_buster (bool, optional): skip cache
         logger (:obj:`logging.logger`, optional): logging handle
 
@@ -75,7 +98,7 @@ def check_coins(
     cache_time = time.time()
 
     logger.info('--checking cache for %s', ticker)
-    cached_data = list(CONN[coins_collection].find(
+    cached_data = list(db_conn[coins_collection].find(
         {'cache_time': {'$gt': cache_time - cache_age}}
     ))
 
@@ -89,10 +112,10 @@ def check_coins(
         coin_cache = list(coins_df.to_dict(orient='records'))
 
         logger.info('--clearing cache')
-        CONN[coins_collection].delete_many({})
+        db_conn[coins_collection].delete_many({})
 
         logger.info('--rebuilding cache')
-        CONN[coins_collection].insert_many(coin_cache)
+        db_conn[coins_collection].insert_many(coin_cache)
 
     else:
         logger.info('--reading cached values')
