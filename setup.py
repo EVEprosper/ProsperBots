@@ -106,7 +106,7 @@ setup(
         'Programming Language :: Python :: 3.5'
     ],
     keywords='prosper nltk discord chat bot slack stocks',
-    packages=find_packages(__library_name__),
+    packages=find_packages(),
     include_package_data=True,
     data_files=[
         ('tests', include_all_subfiles('tests')),
