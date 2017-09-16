@@ -133,8 +133,8 @@ setup(
         'plotnine~=0.2.1'
     ],
     tests_require=[
-        'pytest~=3.0.0',
-        'pytest_cov~=2.4.0',
+        'pytest',
+        'pytest_cov',
     ],
     extras_require={
         'dev':[
