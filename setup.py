@@ -111,7 +111,8 @@ setup(
     data_files=[
         ('tests', include_all_subfiles('tests')),
         ('docs', include_all_subfiles('docs')),
-        ('scripts', include_all_subfiles('scripts'))
+        ('scripts', include_all_subfiles('scripts')),
+        ('services', include_all_subfiles('services'))
     ],
     package_data={
         '': ['LICENSE', 'README.rst'],
