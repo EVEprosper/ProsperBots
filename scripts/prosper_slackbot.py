@@ -59,30 +59,17 @@ def generic_stock_info(message, ticker):
         message_info['user_name'],
         ticker
     )
-    if connections.cooldown(
-            'BASIC-{}'.format(ticker),
+
+    try:
+       data = commands.generic_stock_info(
+            ticker,
             CONN,
             cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
             logger=api_config.LOGGER
-    ):
-        api_config.LOGGER.info('--CALLED TOO QUICKLY: shutting up')
-        return
-
-    with Timer() as basic_quote_timer:
-        try:
-            data = utils.get_basic_ticker_info(
-                ticker.upper(),
-                ['name', 'current_price', 'change_pct'],
-                #['company_name', 'last', 'change_pct'],
-                logger=api_config.LOGGER
-            )
-        except Exception:
-            api_config.LOGGER.error(
-                'Unexpected get_basic_ticker_info() failure',
-                exc_info=True
-            )
-            data = ''
-        api_config.LOGGER.info('--basic_quote_timer=%s', basic_quote_timer)
+        )
+    except Exception:  # pramga: no cover
+        api_config.LOGGER.error('Unable to resolve basic stock info for %s', ticker, exc_info=True)
+        data = ''
 
     if data:  # only emit if there is data
         api_config.LOGGER.debug(data)
