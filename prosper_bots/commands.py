@@ -55,7 +55,7 @@ def generic_stock_info(
     logger.info('Fetching stock info: %s', ticker)
 
     if connections.cooldown(
-            'BASIC-{}'.format(ticker),
+            'BASIC_STOCKS-{}'.format(ticker),
             db_conn,
             cooldown_time=cooldown_time,
             logger=logger
@@ -78,3 +78,51 @@ def generic_stock_info(
 
     return data
 
+def generic_coin_info(
+        ticker,
+        db_conn,
+        currency='USD',
+        cooldown_time=30,
+        info_mask=['name', 'current_price', 'change_pct'],
+        logger=api_config.LOGGER
+):
+    """get generic coin information (current price)
+
+    Args:
+        ticker (str): coin ticker
+        db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
+        currency (str): currenct to FOREX against
+        cooldown_time (int, optional): anti-spam timeout
+        info_mask (:obj:`list`, optional): what data to use from quote endpoint
+        logger (:obj:`logging.logger`, optional): logging handle
+
+    Returns:
+        (str): {comany_name} {current_price} {change_pct}
+
+    """
+    coin_ticker = ticker.upper() + currency
+    logger.info('Fetching coin info: %s', ticker)
+
+    if connections.cooldown(
+            'BASIC_COINS-{}'.format(coin_ticker),
+            db_conn,
+            cooldown_time=cooldown_time,
+            logger=logger
+    ):
+        logger.info('--called too quickly, shutting up')
+        return ''
+
+    with Timer() as coin_info_timer:
+        try:
+            data = utils.get_basic_coin_info(
+                coin_ticker,
+                info_mask,
+                logger=logger
+            )
+        except Exception:  # pragma: no cover
+            logger.warning('unable to fetch basic coin info: %s', coin_ticker, exc_info=True)
+            data = ''
+
+        logger.info('--basic coin quote timer: %s', coin_info_timer)
+
+        return data

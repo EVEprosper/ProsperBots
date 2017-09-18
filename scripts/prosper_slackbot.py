@@ -60,13 +60,35 @@ def generic_stock_info(message, ticker):
         ticker
     )
 
-    try:
-       data = commands.generic_stock_info(
-            ticker,
+    mode = connections.check_channel_mode(
+            message_info['channel_name'],
             CONN,
-            cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
-            logger=api_config.LOGGER
-        )
+            logger=logger
+    )
+    api_config.LOGGER.info('Channel mode: %s', mode.value)
+    try:
+        if mode == connections.Modes.stocks:
+            data = commands.generic_stock_info(
+                ticker,
+                CONN,
+                cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
+                logger=api_config.LOGGER
+            )
+        elif mode == connections.Modes.coins:
+            data = commands.generic_coin_info(
+                ticker,
+                CONN,
+                cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
+                logger=api_config.LOGGER
+            )
+        else:
+            api_config.LOGGER.error(
+                'UNEXPECTED CHANNEL MODE -- #%s %s',
+                message_info['channel_name'],
+                str(mode),
+                exc_info=True
+            )
+            data = ''
     except Exception:  # pramga: no cover
         api_config.LOGGER.error('Unable to resolve basic stock info for %s', ticker, exc_info=True)
         data = ''

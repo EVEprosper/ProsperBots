@@ -42,7 +42,8 @@ def check_channel_mode(
         channel_name,
         db_conn,
         channel_mode_collection=CHANNEL_COLLECTION,
-        default_mode=Modes.stocks
+        default_mode=Modes.stocks,
+        logger=api_config.LOGGER
 ):
     """figure out the mode of a given channel
 
@@ -51,6 +52,7 @@ def check_channel_mode(
         db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
         channel_mode_collection (str, optional): name of collection to query
         default_mode (str, optional): expected mode
+        logger (:obj:`logging.logger`, optional): logging handle
 
     Returns:
         (:obj:`Enum`): channel mode
@@ -62,7 +64,8 @@ def set_channel_mode(
         channel_name,
         channel_mode,
         db_conn,
-        channel_mode_collection=CHANNEL_COLLECTION
+        channel_mode_collection=CHANNEL_COLLECTION,
+        logger=api_config.LOGGER
 ):
     """set expected mode for channel
 
@@ -71,7 +74,7 @@ def set_channel_mode(
         channel_mode (str): what mode to set the channel to
         db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
         channel_mode_collection (str, optional): name of collection to query
-
+        logger (:obj:`logging.logger`, optional): logging handle
     Returns:
         (:obj:`Enum`): channel mode
 
