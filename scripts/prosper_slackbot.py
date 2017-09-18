@@ -18,6 +18,7 @@ from prosper_bots._version import __version__
 import prosper_bots.config as api_config
 import prosper_bots.utils as utils
 import prosper_bots.connections as connections
+import prosper_bots.slack_utils as slack_utils
 
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
@@ -28,6 +29,8 @@ PP = pprint.PrettyPrinter(indent=2)
 @slackbot.bot.respond_to('version', re.IGNORECASE)
 def which_prosperbot(message):
     """echo deployment info"""
+    #PP.pprint(message._client.__dict__)
+    PP.pprint(slack_utils.parse_message_metadata(message))
     api_config.LOGGER.info(
         '@%s -- Version Info -- %s',
         message._client.users[message._body['user']]['name'],
@@ -38,6 +41,11 @@ def which_prosperbot(message):
         __version__,
         platform.node()
     ))
+
+@slackbot.bot.respond_to('set mode (.*)')
+def change_mode(message, mode):
+    """set expected mode for channel"""
+    pass
 
 @slackbot.bot.listen_to(r'`\$(.*)`')
 def generic_stock_info(message, ticker):

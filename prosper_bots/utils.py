@@ -20,6 +20,10 @@ pd_reader.yahoo.quotes._yahoo_codes = {
     'company_name': 'n'
 }
 
+class Modes(Enum):
+    """channel modes"""
+    stocks = 'stocks'
+    coins = 'coins'
 
 class Sources(Enum):
     """supported data sources"""
