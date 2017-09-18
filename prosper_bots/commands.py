@@ -63,7 +63,7 @@ def generic_stock_info(
         logger.info('--called too quickly, shutting up')
         return ''
 
-    with Timer as stock_info_timer:
+    with Timer() as stock_info_timer:
         try:
             data = utils.get_basic_ticker_info(
                 ticker,

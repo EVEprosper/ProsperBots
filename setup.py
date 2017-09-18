@@ -135,6 +135,7 @@ setup(
     tests_require=[
         'pytest',
         'pytest_cov',
+        'parse'
     ],
     extras_require={
         'dev':[
