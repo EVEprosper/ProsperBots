@@ -19,6 +19,7 @@ import prosper_bots.config as api_config
 import prosper_bots.utils as utils
 import prosper_bots.connections as connections
 import prosper_bots.slack_utils as slack_utils
+import prosper_bots.commands as commands
 
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
@@ -29,18 +30,18 @@ PP = pprint.PrettyPrinter(indent=2)
 @slackbot.bot.respond_to('version', re.IGNORECASE)
 def which_prosperbot(message):
     """echo deployment info"""
-    #PP.pprint(message._client.__dict__)
-    PP.pprint(slack_utils.parse_message_metadata(message))
+    message_info = slack_utils.parse_message_metadata(message)
     api_config.LOGGER.info(
-        '@%s -- Version Info -- %s',
-        message._client.users[message._body['user']]['name'],
-        __version__
+        '#%s @%s -- Version Info',
+        message_info['channel_name']
+        message_info['user_name']
     )
-    message.send('{} -- {} -- {}'.format(
-        PROGNAME,
-        __version__,
-        platform.node()
-    ))
+    try:
+        version_str = commands.version_info(PROGNAME)
+    except Exception:  # pragma: no cover
+        api_config.LOGGER.error('Unable to build version info', exc_info=True)
+
+    message.send(version_str)
 
 @slackbot.bot.respond_to('set mode (.*)')
 def change_mode(message, mode):
@@ -51,9 +52,11 @@ def change_mode(message, mode):
 def generic_stock_info(message, ticker):
     """echo basic info about stock"""
     ticker = ticker.upper()
+    message_info = slack_utils.parse_message_metadata(message)
     api_config.LOGGER.info(
-        '@%s -- Basic company info -- %s',
-        message._client.users[message._body['user']]['name'],
+        '#%s @%s -- Basic company info %s',
+        message_info['channel_name']
+        message_info['user_name'],
         ticker
     )
     if connections.cooldown(
