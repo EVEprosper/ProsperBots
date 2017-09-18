@@ -1,6 +1,7 @@
 """connections.py: database and cache utilities for bot commands"""
 from os import path
 import time
+from enum import Enum
 #from datetime import datetime, timedelta
 
 from tinymongo import TinyMongoClient
@@ -10,6 +11,11 @@ import prosper_bots.config as api_config
 import prosper.datareader.coins.info as info
 
 HERE = path.abspath(path.dirname(__file__))
+
+class Modes(Enum):
+    """channel modes"""
+    stocks = 'stocks'
+    coins = 'coins'
 
 def build_connection(
         source_name,
@@ -30,6 +36,47 @@ def build_connection(
     logger.info('Building db connection: %s', path.join(source_path, source_name + '.json'))
 
     return TinyMongoClient(source_path)[source_name]
+
+CHANNEL_COLLECTION = 'channel_settings'
+def check_channel_mode(
+        channel_name,
+        db_conn,
+        channel_mode_collection=CHANNEL_COLLECTION,
+        default_mode=Modes.stocks
+):
+    """figure out the mode of a given channel
+
+    Args:
+        channel_name (str): name of channel
+        db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
+        channel_mode_collection (str, optional): name of collection to query
+        default_mode (str, optional): expected mode
+
+    Returns:
+        (:obj:`Enum`): channel mode
+
+    """
+    pass
+
+def set_channel_mode(
+        channel_name,
+        channel_mode,
+        db_conn,
+        channel_mode_collection=CHANNEL_COLLECTION
+):
+    """set expected mode for channel
+
+    Args:
+        channel_name (str): name of channel
+        channel_mode (str): what mode to set the channel to
+        db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
+        channel_mode_collection (str, optional): name of collection to query
+
+    Returns:
+        (:obj:`Enum`): channel mode
+
+    """
+    pass
 
 COOLDOWN_COLLECTION = 'cooldown'
 def cooldown(
