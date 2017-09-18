@@ -39,3 +39,11 @@ class TestGenericStockInfo:
         )
 
         assert response == ''
+
+    def test_generic_stock_info_badticker(self):
+        """validate unsupported ticker response"""
+        response = commands.generic_stock_info(
+            'BUTTS',
+            self.conn
+        )
+        assert response == ''
