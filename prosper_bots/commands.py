@@ -65,11 +65,8 @@ def generic_stock_info(
 
     with Timer() as stock_info_timer:
         try:
-            data = utils.get_basic_ticker_info(
-                ticker,
-                info_mask,
-                logger=logger
-            )
+            raw_data = stocks.prices.get_quote_rh(ticker)
+            data = ' '.join(list(map(str, raw_data.loc[0, info_mask])))
         except Exception:  # pragma: no cover
             logger.warning('unable to fetch basic ticker info', exc_info=True)
             data = ''
@@ -83,7 +80,7 @@ def generic_coin_info(
         db_conn,
         currency='USD',
         cooldown_time=30,
-        info_mask=['name', 'current_price', 'change_pct'],
+        info_mask=['name', 'last', 'change_pct'],
         logger=api_config.LOGGER
 ):
     """get generic coin information (current price)
@@ -114,11 +111,14 @@ def generic_coin_info(
 
     with Timer() as coin_info_timer:
         try:
-            data = utils.get_basic_coin_info(
-                coin_ticker,
-                info_mask,
-                logger=logger
+            raw_data = coins.prices.get_quote_cc(
+                [ticker],
+                logger=logger,
+                currency=currency,
+                to_yahoo=True
             )
+            print(raw_data)
+            data = ' '.join(list(map(str, raw_data.loc[ticker, info_mask])))
         except Exception:  # pragma: no cover
             logger.warning('unable to fetch basic coin info: %s', coin_ticker, exc_info=True)
             data = ''

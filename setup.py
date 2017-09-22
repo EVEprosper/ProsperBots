@@ -94,6 +94,22 @@ class PyTest(TestCommand):
         errno = pytest.main(pytest_commands)
         exit(errno)
 
+class QuickTest(PyTest):
+    """wrapper for quick-testing for devs"""
+    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = [
+            'tests',
+            '-rx',
+            '-n',
+            '4',
+            '--cov=' + __library_name__,
+            '--cov-report=term-missing',
+            '--cov-config=.coveragerc'
+        ]
+
 setup(
     name=__package_name__,
     author='John Purcell',
@@ -120,7 +136,7 @@ setup(
     },
     install_requires=[
         'ProsperCommon~=1.1.1',
-        'ProsperDatareader[nltk]~=1.1.3',
+        'ProsperDatareader[nltk]~=1.2.0a0',
         'tinydb~=3.4.1',
         'tinymongo~=0.1.9',
         'discord.py~=0.16.10',
@@ -146,6 +162,7 @@ setup(
         ]
     },
     cmdclass={
-        'test':PyTest
+        'test':PyTest,
+        'fast': QuickTest
     }
 )

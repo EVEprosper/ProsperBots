@@ -30,7 +30,9 @@ class TestVersionInfo:
 class TestGenericStockInfo:
     """validate generic_stock_info behavior"""
     stock_ticker = 'MU'
+    alternate_ticker = 'INTC'
     conn = tinymongo.TinyMongoClient(CACHE_PATH)['prosper']
+
     #TODO clear chaces?
     def test_generic_stock_info_happypath(self):
         """make sure expected path works as expected"""
@@ -38,6 +40,7 @@ class TestGenericStockInfo:
             self.stock_ticker,
             self.conn
         )
+        print(response)
         values = search('{company_name} {price:f} {change_pct:%}', response)
 
         assert values['company_name'] == 'Micron Technology, Inc. - Common Stock'
@@ -46,6 +49,14 @@ class TestGenericStockInfo:
 
     def test_generic_stock_info_cooldown(self):
         """make sure cooldown works as expected"""
+        dump_response = commands.generic_stock_info(
+            self.alternate_ticker,
+            self.conn,
+            cooldown_time=10
+        )
+
+        assert dump_response != ''
+
         response = commands.generic_stock_info(
             self.stock_ticker,
             self.conn,
@@ -57,6 +68,51 @@ class TestGenericStockInfo:
     def test_generic_stock_info_badticker(self):
         """validate unsupported ticker response"""
         response = commands.generic_stock_info(
+            'BUTTS',
+            self.conn
+        )
+        assert response == ''
+
+class TestGenericCoinInfo:
+    """validate generic_stock_info behavior"""
+    stock_ticker = 'BTC'
+    alternate_ticker = 'ETH'
+    conn = tinymongo.TinyMongoClient(CACHE_PATH)['prosper']
+    #TODO clear chaces?
+    def test_generic_coin_info_happypath(self):
+        """make sure expected path works as expected"""
+        response = commands.generic_coin_info(
+            self.stock_ticker,
+            self.conn
+        )
+        print(response)
+        values = search('{coin_name} {price:f} {change_pct:%}', response)
+
+        assert values['coin_name'] == 'Bitcoin'
+        assert isinstance(values['price'], float)
+        assert isinstance(values['change_pct'], float)
+
+    def test_generic_coin_info_cooldown(self):
+        """make sure cooldown works as expected"""
+        dump_response = commands.generic_coin_info(
+            self.alternate_ticker,
+            self.conn,
+            cooldown_time=10
+        )
+
+        assert dump_response != ''
+
+        response = commands.generic_coin_info(
+            self.alternate_ticker,
+            self.conn,
+            cooldown_time=10
+        )
+
+        assert response == ''
+
+    def test_generic_coin_info_badticker(self):
+        """validate unsupported ticker response"""
+        response = commands.generic_coin_info(
             'BUTTS',
             self.conn
         )
