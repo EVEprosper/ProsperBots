@@ -3,6 +3,16 @@
 
 ## Stolen from http://doc.pytest.org/en/latest/example/simple.html#incremental-testing-test-steps
 import pytest
+from os import path
+import shutil
+
+HERE = path.abspath(path.dirname(__file__))
+ROOT = path.abspath(path.join(path.dirname(HERE), 'prosper_bots'))
+CACHE_PATH = path.join(HERE, 'cache')
+try:
+    shutil.rmtree(CACHE_PATH)
+except Exception:
+    print('no cache to clear: {}'.format(CACHE_PATH))
 
 def pytest_runtest_makereport(item, call):
     if "incremental" in item.keywords:

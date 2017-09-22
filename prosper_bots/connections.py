@@ -2,12 +2,13 @@
 from os import path
 import time
 from enum import Enum
-#from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 
 from tinymongo import TinyMongoClient
 import pandas as pd
 
-import prosper_bots.config as api_config
+from . import config as api_config
+from . import exceptions
 import prosper.datareader.coins.info as info
 
 HERE = path.abspath(path.dirname(__file__))
@@ -16,6 +17,7 @@ class Modes(Enum):
     """channel modes"""
     stocks = 'stocks'
     coins = 'coins'
+    test = 'TEST'
 
 def build_connection(
         source_name,
@@ -38,17 +40,18 @@ def build_connection(
     return TinyMongoClient(source_path)[source_name]
 
 CHANNEL_COLLECTION = 'channel_settings'
+DEFAULT_MODE = Modes.stocks
 def check_channel_mode(
         channel_name,
         db_conn,
         channel_mode_collection=CHANNEL_COLLECTION,
-        default_mode=Modes.stocks,
+        default_mode=DEFAULT_MODE,
         logger=api_config.LOGGER
 ):
     """figure out the mode of a given channel
 
     Args:
-        channel_name (str): name of channel
+        channel_name (str): name of channel (guid > pretty-string)
         db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
         channel_mode_collection (str, optional): name of collection to query
         default_mode (str, optional): expected mode
@@ -58,11 +61,29 @@ def check_channel_mode(
         (:obj:`Enum`): channel mode
 
     """
-    pass
+    logger.info('Checking channel mode for %s', channel_name)
+    mode_res = list(db_conn[channel_mode_collection].\
+        find({'channel_name': channel_name}))
+
+    if len(mode_res) > 1:
+        logger.warning('Too many options returned, confused')
+        logger.debug(mode_res)
+        raise exceptions.TooManyOptions(
+            'channel_mode returned {}, expected <1'.format(len(mode_res)))
+
+    if not mode_res:
+        logger.info('--no mode found, using default: %s', default_mode.value)
+        return default_mode
+
+    channel_mode = mode_res[0]['channel_mode']
+    logger.info('--channel mode %s', channel_mode)
+    set_mode = Modes(channel_mode)  # validate option is supported
+    return set_mode
 
 def set_channel_mode(
         channel_name,
         channel_mode,
+        user_name,
         db_conn,
         channel_mode_collection=CHANNEL_COLLECTION,
         logger=api_config.LOGGER
@@ -70,8 +91,9 @@ def set_channel_mode(
     """set expected mode for channel
 
     Args:
-        channel_name (str): name of channel
+        channel_name (str): name of channel (guid > pretty-string)
         channel_mode (str): what mode to set the channel to
+        user_name (str): who is setting the channel mode
         db_conn (:obj:`tinymongo.TinyMongoDatabase`): database to use
         channel_mode_collection (str, optional): name of collection to query
         logger (:obj:`logging.logger`, optional): logging handle
@@ -79,7 +101,35 @@ def set_channel_mode(
         (:obj:`Enum`): channel mode
 
     """
-    pass
+    set_mode = Modes(channel_mode)  # validate option is supported
+    logger.info('Setting channel %s to %s mode', channel_name, channel_mode)
+
+    current_mode_res = list(db_conn[channel_mode_collection].\
+        find({'channel_name': channel_name}))
+
+    if current_mode_res:
+        logger.info('--current mode found: %s', current_mode_res[0]['channel_mode'])
+        if len(current_mode_res) > 1:
+            logger.warning('Too many options returned, confused')
+            logger.debug(current_mode_res)
+            raise exceptions.TooManyOptions(
+                'channel_mode returned {}, expected <1'.format(len(current_mode_res)))
+
+    logger.info('--cleaning up collection')
+    db_conn[channel_mode_collection].delete_many({'channel_name': channel_name})
+
+    logger.info('--setting up channel mode')
+    channel_mode_obj = {
+        'channel_name': channel_name,
+        'channel_mode': channel_mode,
+        'channel_set_time': datetime.utcnow().isoformat(),
+        'user_name': user_name
+    }
+    logger.debug(channel_mode_obj)
+    db_conn[channel_mode_collection].insert_one(channel_mode_obj)
+
+    return set_mode
+
 
 COOLDOWN_COLLECTION = 'cooldown'
 def cooldown(

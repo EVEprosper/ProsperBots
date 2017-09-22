@@ -1,6 +1,7 @@
 """test_commands.py: validate core responses for bots"""
 from os import path
 import platform
+import time
 
 from parse import *
 import pytest
@@ -54,16 +55,16 @@ class TestGenericStockInfo:
             self.conn,
             cooldown_time=10
         )
-
         assert dump_response != ''
 
         response = commands.generic_stock_info(
-            self.stock_ticker,
+            self.alternate_ticker,
             self.conn,
             cooldown_time=10
         )
-
         assert response == ''
+
+        ## TODO: fails multi-thread? ##
 
     def test_generic_stock_info_badticker(self):
         """validate unsupported ticker response"""
@@ -99,7 +100,6 @@ class TestGenericCoinInfo:
             self.conn,
             cooldown_time=10
         )
-
         assert dump_response != ''
 
         response = commands.generic_coin_info(
