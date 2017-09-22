@@ -1,0 +1,13 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+  - "3.6-dev" # 3.6 development branch
+install: 
+  - "pip install semantic_version"
+  - "pip install ."
+script: 
+  - "python setup.py test"
+after_success:
+  - "pip install python-coveralls"
+  - "coveralls"

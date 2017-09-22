@@ -1,0 +1,5 @@
+[report]
+    omit = prosper_bots/_version.py
+
+[paths]
+    source = prosper_bots
