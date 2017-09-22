@@ -33,7 +33,7 @@ def which_prosperbot(message):
     message_info = slack_utils.parse_message_metadata(message)
     api_config.LOGGER.info(
         '#%s @%s -- Version Info',
-        message_info['channel_name']
+        message_info['channel_name'],
         message_info['user_name']
     )
     try:

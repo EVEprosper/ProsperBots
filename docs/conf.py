@@ -118,10 +118,10 @@ html_show_sourcelink = False
 #
 html_theme_options = {
     'logo': 'logo-colour-sm.png',
-    'description': 'Uniform Data Collection',
+    'description': 'Market Watching Chat Bots',
     'description_font_style': 'italic',
     'github_user': 'eveprosper',
-    'github_repo': 'prosperdatareader',
+    'github_repo': 'prosperbots',
     'github_banner': True,
 }
 
