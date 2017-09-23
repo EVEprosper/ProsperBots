@@ -1,5 +1,11 @@
-prosper-bots (0.0.3) stable; urgency=low
+prosper-bots (0.0.4) stable; urgency=low
+  * Adding basic coins support to bot vocab
+  * Adding channel mode-switching
+  * Adding cooldown helper
+  * Adding caching layer
+ -- John Purcell <jpurcell.ee@gmail.com>  Fri, 22 Sep 2017 19:00:00 -0700
 
+prosper-bots (0.0.3) stable; urgency=low
   * Initial release
   * Adding Slack to bot coverage (slackbot)
   * Adding Discord to bot coverage (discord.py)
