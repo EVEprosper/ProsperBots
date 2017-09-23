@@ -6,6 +6,8 @@ HERE = path.abspath(path.dirname(__file__))
 def parse_message_metadata(message_obj):
     """parse user_name/channel_name out of slack controller
 
+    Notes:
+        `slackbot.message`.keys(): [type, channel, user, text, ts, source_team, team]
     Args:
         message_obj (:obj:`slackbot.message`): response object for slack
 

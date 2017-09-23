@@ -43,10 +43,39 @@ def which_prosperbot(message):
 
     message.send(version_str)
 
+
 @slackbot.bot.respond_to('set mode (.*)')
 def change_mode(message, mode):
     """set expected mode for channel"""
-    pass
+    message_info = slack_utils.parse_message_metadata(message)
+    print(message._body)
+    api_config.LOGGER.info(
+        '#%s @%s -- Setting channel mode %s',
+        message_info['channel_name'],
+        message_info['user_name'],
+        mode
+    )
+
+    try:
+        set_mode = connections.set_channel_mode(
+            message_info['channel'],
+            mode,
+            message_info['user_name'],
+            CONN,
+            logger=api_config.LOGGER
+        )
+    except Exception as err:
+        api_config.LOGGER.error(
+            'Unable to set #%s to %s',
+            message_info['channel_name'],
+            mode,
+            exc_info=True
+        )
+        message.send('Unable to set mode {} for channel: `{}`'.format(mode, repr(err)))
+        return
+
+    message.send('OK, I set this channel to `{}`'.format(set_mode.value))
+
 
 @slackbot.bot.listen_to(r'`\$(.*)`')
 def generic_stock_info(message, ticker):
@@ -55,15 +84,15 @@ def generic_stock_info(message, ticker):
     message_info = slack_utils.parse_message_metadata(message)
     api_config.LOGGER.info(
         '#%s @%s -- Basic company info %s',
-        message_info['channel_name']
+        message_info['channel_name'],
         message_info['user_name'],
         ticker
     )
 
     mode = connections.check_channel_mode(
-            message_info['channel_name'],
-            CONN,
-            logger=logger
+        message_info['channel'],
+        CONN,
+        logger=api_config.LOGGER
     )
     api_config.LOGGER.info('Channel mode: %s', mode.value)
     try:
@@ -96,6 +125,7 @@ def generic_stock_info(message, ticker):
     if data:  # only emit if there is data
         api_config.LOGGER.debug(data)
         message.send('`' + data + '`')
+
 
 class ProsperSlackBot(cli.Application):
     """wrapper for slackbot Main()"""
