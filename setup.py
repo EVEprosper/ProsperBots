@@ -132,18 +132,18 @@ setup(
     ],
     package_data={
         '': ['LICENSE', 'README.rst'],
-        'prosper-bots': ['version.txt']
+        'prosper_bots': ['version.txt']
     },
     install_requires=[
         'ProsperCommon~=1.1.1',
-        'ProsperDatareader[nltk]~=1.2.0a1',
+        'ProsperDatareader[nltk]~=1.2.1',
         'tinydb~=3.4.1',
         'tinymongo~=0.1.9',
         'discord.py~=0.16.10',
         'slackbot~=0.5.1',
         'plumbum~=1.6.3',
         'pandas~=0.20.3',
-        'pandas_datareader~=0.5.0',
+        'pandas-datareader~=0.5.0',
         'requests-cache~=0.4.13',
         'contexttimer~=0.3.3',
         'plotnine~=0.2.1'
@@ -155,7 +155,6 @@ setup(
     ],
     extras_require={
         'dev':[
-            'pandas-datareader',
             'sphinx',
             'sphinxcontrib-napoleon',
             'semantic-version'
