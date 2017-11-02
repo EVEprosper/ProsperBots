@@ -20,6 +20,7 @@ import prosper_bots.utils as utils
 import prosper_bots.connections as connections
 import prosper_bots.slack_utils as slack_utils
 import prosper_bots.commands as commands
+import prosper_bots.exceptions as exceptions
 
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
@@ -150,6 +151,9 @@ def stock_news(message, ticker):
                 ticker, CONN, cooldown_time=0, logger=api_config.LOGGER,
                 info_mask=['name', 'current_price', 'change_pct']
             )
+            if not quote:
+                raise exceptions.EmptyQuoteReturned
+
             direction = float(quote.split()[-1].replace('%', ''))
             link, details = commands.stock_news(
                 ticker,
@@ -169,17 +173,28 @@ def stock_news(message, ticker):
                 exc_info=True
             )
             quote = ''
-    except Exception:
+    except exceptions.ProsperBotException:
+        api_config.LOGGER.warning(
+            'Unable to resolve basic stock info for %s',
+            ticker, exc_info=True
+        )
+        quote = 'ERROR - NO QUOTE DATA FOUND FOR {}'.format(ticker)
+        link = ''
+    except Exception as err:
         api_config.LOGGER.error(
             'Unable to resolve basic stock info for %s',
             ticker, exc_info=True
         )
-        quote = ''
+        quote = 'ERROR - UNABLE TO RESOLVE NEWS {} -- {}'.format(
+            ticker,
+            repr(err)
+        )
+        link = ''
 
     if quote:  # only emit if there is data
         api_config.LOGGER.debug(quote)
         message.send(
-            '`' + quote + '`' +
+            '`' + quote + '`\n' +
             link #+ ' ' + details
         )
 

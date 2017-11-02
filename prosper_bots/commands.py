@@ -146,13 +146,22 @@ def stock_news(
         str: additional info
 
     """
-    if isinstance(direction, str):
-        direction = float(direction.split()[-1].replace('%', ''))
+    #if isinstance(direction, str):
+    #    direction = float(direction.split()[-1].replace('%', ''))
 
     logger.info('--fetching news')
-    news_df = stocks.news.company_news_google(ticker, logger=logger)
-    news_df = pdr_utils.vader_sentiment(news_df, 'title', logger=logger)
-    logger.debug(news_df.head(5))
+    with Timer() as stock_news_timer:
+        try:
+            news_df = stocks.news.company_news_google(ticker, logger=logger)
+            news_df = pdr_utils.vader_sentiment(news_df, 'title', logger=logger)
+        except Exception as err:
+            logger.warning('unable to fetch news for ticker %s', ticker, exc_info=True)
+            return 'ERROR - UNABLE TO FETCH NEWS FOR {} - {}'.format(
+                ticker, repr(err)
+            ), ''
+
+        logger.debug(news_df.head(5))
+        logger.info('--news fetch timer: %s', stock_news_timer)
 
     if direction > 0:
         logger.info('--finding positive news')

@@ -9,3 +9,6 @@ class ConnectionsException(ProsperBotException):
 class TooManyOptions(ConnectionsException):
     """bot is confused, can't pick the right option out of many"""
     pass
+class EmptyQuoteReturned(ProsperBotException):
+    """expected quote data, got back nothing.  Don't go forward"""
+    pass
