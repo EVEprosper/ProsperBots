@@ -117,3 +117,64 @@ class TestGenericCoinInfo:
             self.conn
         )
         assert response == ''
+
+
+class TestStockNews:
+    """validate stock_news behavior"""
+    stock_ticker = 'MU'
+    alt_ticker = 'INTC'
+    bad_ticker = 'BUTTS'
+
+    def retry_stock_news(self, direction):
+        """retry with a different ticker"""
+        return commands.stock_news(
+            self.alt_ticker,
+            direction
+        )
+    def test_stock_news_happypath_pos(self):
+        """make sure service works as expected - positive case"""
+        url, score = commands.stock_news(
+            self.stock_ticker,
+            1.0
+        )
+        if not url:
+            url, score = self.retry_stock_news(1.0)
+
+        assert isinstance(url, str)
+        assert isinstance(score, str)  # scores are cast to str
+
+        assert float(score) >= 0.0
+
+    def test_stock_news_happypath_neg(self):
+        """make sure service works as expected - negative case"""
+        url, score = commands.stock_news(
+            self.stock_ticker,
+            -1.0
+        )
+        if not url:
+            url, score = self.retry_stock_news(1.0)
+
+        assert isinstance(url, str)
+        assert isinstance(score, str)  # scores are cast to str
+
+        assert float(score) <= 0.0
+
+    def test_stock_news_happypath_neut(self):
+        """make sure service works as expected - neutral case"""
+        url, score = commands.stock_news(
+            self.stock_ticker,
+            0.0
+        )
+
+        assert url == ''
+        assert score == ''
+
+    def test_stock_news_badticker(self):
+        """invalid ticker behavior"""
+        url, score = commands.stock_news(
+            self.bad_ticker,
+            1.0
+        )
+
+        assert 'ERROR - ' in url
+        assert score == ''

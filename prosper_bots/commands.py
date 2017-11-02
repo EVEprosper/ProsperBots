@@ -177,7 +177,8 @@ def stock_news(
         url = best_article.iloc[0]['url']
         score = best_article.iloc[0]['compound']
 
-    else:
+    else:  # pragma no cover
+        #TODO: raise EmptyQuoteReturned?
         url = ''
         score = ''
 
