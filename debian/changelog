@@ -1,13 +1,19 @@
+prosper-bots (0.0.5) stable; urgency=low
+  * Adds `news <ticker>` command to slackbot
+  * BUGFIX: allow slackbot to parse message data in private-message
+  * Removes check_coins from connections module (unused)
+  * Updates .service files and adds `prosper_` to avoid namespace collisions
+ -- John Purcell <jpurcell.ee@gmail.com>  Thu, 02 Nov 2017 15:00:00 -0700
+
 prosper-bots (0.0.4) stable; urgency=low
-  * Adding basic coins support to bot vocab
-  * Adding channel mode-switching
-  * Adding cooldown helper
-  * Adding caching layer
+  * Adds basic coins support to bot vocab
+  * Adds channel mode-switching
+  * Adds cooldown helper
+  * Adds caching layer
  -- John Purcell <jpurcell.ee@gmail.com>  Fri, 22 Sep 2017 19:00:00 -0700
 
 prosper-bots (0.0.3) stable; urgency=low
   * Initial release
-  * Adding Slack to bot coverage (slackbot)
-  * Adding Discord to bot coverage (discord.py)
-
+  * Adds Slack to bot coverage (slackbot)
+  * Adds Discord to bot coverage (discord.py)
  -- John Purcell <jpurcell.ee@gmail.com>  Sat, 16 Sep 2017 09:30:00 -0700
