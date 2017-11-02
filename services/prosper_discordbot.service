@@ -1,0 +1,16 @@
+[Unit]
+Description=Discord Bot for Prosper channels
+After=multi-user.target
+
+[Service]
+TimeoutStartSec=30
+Type=simple
+WorkingDirectory=/opt/venvs/prosper-bots/
+ExecStart=/opt/venvs/prosper-bots/bin/python3.5 /opt/venvs/prosper-bots/scripts/prosper_discordbot.py
+StandardOutput=syslog
+StandardError=syslog
+User=prosper
+User=root
+
+[Install]
+WantedBy=multi-user.target
