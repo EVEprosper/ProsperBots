@@ -6,6 +6,7 @@ from contexttimer import Timer
 
 import prosper.datareader.coins as coins
 import prosper.datareader.stocks as stocks
+import prosper.datareader.utils as pdr_utils
 
 from . import _version
 from . import connections
@@ -119,10 +120,57 @@ def generic_coin_info(
             )
             print(raw_data)
             data = ' '.join(list(map(str, raw_data.loc[ticker, info_mask])))
-        except Exception:  # pragma: no cover
+        except Exception:
             logger.warning('unable to fetch basic coin info: %s', coin_ticker, exc_info=True)
             data = ''
 
         logger.info('--basic coin quote timer: %s', coin_info_timer)
 
         return data
+
+def stock_news(
+        ticker,
+        direction,
+        logger=api_config.LOGGER
+):
+    """generate news along with quote
+
+    Args:
+        ticker (str): coin ticker
+        direction (float): change_pct value +/-
+        info_mask (:obj:`list`, optional): what data to use from quote endpoint
+        logger (:obj:`logging.logger`, optional): logging handle
+
+    Returns:
+        str: link to "best" article
+        str: additional info
+
+    """
+    if isinstance(direction, str):
+        direction = float(direction.split()[-1].replace('%', ''))
+
+    logger.info('--fetching news')
+    news_df = stocks.news.company_news_google(ticker, logger=logger)
+    news_df = pdr_utils.vader_sentiment(news_df, 'title', logger=logger)
+    logger.debug(news_df.head(5))
+
+    if direction > 0:
+        logger.info('--finding positive news')
+        best_article = news_df[news_df['compound'] == max(news_df['compound'])]
+        logger.debug(best_article)
+        url = best_article.iloc[0]['url']
+        score = best_article.iloc[0]['compound']
+
+    elif direction < 0:
+        logger.info('--finding negative news')
+        best_article = news_df[news_df['compound'] == min(news_df['compound'])]
+        logger.debug(best_article)
+        url = best_article.iloc[0]['url']
+        score = best_article.iloc[0]['compound']
+
+    else:
+        url = ''
+        score = ''
+
+    logger.info('--best article: %s (%s)', url, score)
+    return str(url), str(score)

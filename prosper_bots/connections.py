@@ -154,6 +154,9 @@ def cooldown(
         FileError: can't make a cache file
 
     """
+    if cooldown_time <= 0:  # pragma: no cover
+        return
+
     logger.info('--checking cooldown cache for %s', element_name)
     cache_element = db_conn[cooldown_collection].find_one({'element_name': element_name})
 

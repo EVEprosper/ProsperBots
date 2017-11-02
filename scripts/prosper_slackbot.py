@@ -146,12 +146,21 @@ def stock_news(message, ticker):
     api_config.LOGGER.info('Channel mode: %s', mode.value)
     try:
         if mode == connections.Modes.stocks:
-            api_config.LOGGER.info('stock news')
-            data = 'to be implemented'
+            quote = commands.generic_stock_info(
+                ticker, CONN, cooldown_time=0, logger=api_config.LOGGER,
+                info_mask=['name', 'current_price', 'change_pct']
+            )
+            direction = float(quote.split()[-1].replace('%', ''))
+            link, details = commands.stock_news(
+                ticker,
+                direction,
+                logger=api_config.LOGGER
+            )
+
         elif mode == connections.Modes.coins:
             api_config.LOGGER.warning('not supported')
             message.send('mode=coins not supported')
-            data=''
+            quote=''
         else:
             api_config.LOGGER.error(
                 'UNEXPECTED CHANNEL MODE -- #%s %s',
@@ -159,14 +168,20 @@ def stock_news(message, ticker):
                 str(mode),
                 exc_info=True
             )
-            data = ''
+            quote = ''
     except Exception:
-        api_config.LOGGER.error('Unable to resolve basic stock info for %s', ticker, exc_info=True)
-        data = ''
+        api_config.LOGGER.error(
+            'Unable to resolve basic stock info for %s',
+            ticker, exc_info=True
+        )
+        quote = ''
 
-    if data:  # only emit if there is data
-        api_config.LOGGER.debug(data)
-        message.send('`' + data + '`')
+    if quote:  # only emit if there is data
+        api_config.LOGGER.debug(quote)
+        message.send(
+            '`' + quote + '`' +
+            link #+ ' ' + details
+        )
 
 class ProsperSlackBot(cli.Application):
     """wrapper for slackbot Main()"""
