@@ -19,7 +19,9 @@ def parse_message_metadata(message_obj):
     try:
         metadata['channel_name'] = message_obj._client.channels[metadata['channel']]['name']
     except KeyError:
-        metadata['channel_name'] = '__DIRECT_MESSAGE'
+        metadata['channel_name'] = 'DIRECT_MESSAGE:{}'.format(
+            message_obj._client.users[metadata['user']]['name']
+        )
     metadata['user_name'] = message_obj._client.users[metadata['user']]['name']
     metadata['team_name'] = message_obj._client.login_data['team']['name']
 
