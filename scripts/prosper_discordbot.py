@@ -110,6 +110,50 @@ async def price(context, ticker):
             link + ' ' + details
         )
 
+@bot.command(pass_context=True)
+async def coin(context, ticker):
+    """fetch relevant article for requested stock"""
+    ticker = ticker.upper()
+    message_info = platform_utils.parse_discord_context_object(context)
+    api_config.LOGGER.info(
+        '%s #%s @%s -- Cryptocoin Info',
+        message_info['team_name'],
+        message_info['channel_name'],
+        message_info['user_name'],
+    )
+
+    try:
+        quote = commands.generic_coin_info(
+            ticker,
+            CONN,
+            cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
+            logger=api_config.LOGGER
+        )
+        if not quote:
+            raise exceptions.EmptyQuoteReturned
+    except exceptions.ProsperBotException:
+        api_config.LOGGER.warning(
+            'Unable to resolve coin info for %s',
+            ticker, exc_info=True
+        )
+        quote = 'ERROR - NO QUOTE DATA FOUND FOR {}'.format(ticker)
+    except Exception as err:
+        api_config.LOGGER.error(
+            'Unable to resolve basic stock info for %s',
+            ticker, exc_info=True
+        )
+        quote = 'ERROR - UNABLE TO COIN INFO {} -- {}'.format(
+            ticker,
+            repr(err)
+        )
+
+    if quote:
+        api_config.LOGGER.debug(quote)
+        await bot.say(
+            '```' + quote + '```'
+        )
+
+
 class ProsperDiscordBot(cli.Application):
     """wrapper for slackbot Main()"""
     PROGNAME = PROGNAME
