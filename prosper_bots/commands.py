@@ -118,7 +118,7 @@ def generic_coin_info(
                 currency=currency,
                 to_yahoo=True
             )
-            print(raw_data)
+            logger.debug(raw_data)
             data = ' '.join(list(map(str, raw_data.loc[ticker, info_mask])))
         except Exception:
             logger.warning('unable to fetch basic coin info: %s', coin_ticker, exc_info=True)

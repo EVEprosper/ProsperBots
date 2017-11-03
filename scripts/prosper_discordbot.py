@@ -64,10 +64,11 @@ async def price(context, ticker):
     ticker = ticker.upper()
     message_info = platform_utils.parse_discord_context_object(context)
     api_config.LOGGER.info(
-        '%s #%s @%s -- Stock News',
+        '%s #%s @%s -- Stock News `%s`',
         message_info['team_name'],
         message_info['channel_name'],
         message_info['user_name'],
+        ticker
     )
 
     try:
@@ -111,22 +112,25 @@ async def price(context, ticker):
         )
 
 @bot.command(pass_context=True)
-async def coin(context, ticker):
+async def coin(context, ticker, currency='USD'):
     """fetch relevant article for requested stock"""
     ticker = ticker.upper()
+    currency = currency.upper()
     message_info = platform_utils.parse_discord_context_object(context)
     api_config.LOGGER.info(
-        '%s #%s @%s -- Cryptocoin Info',
+        '%s #%s @%s -- Cryptocoin Info `%s`x%s',
         message_info['team_name'],
         message_info['channel_name'],
         message_info['user_name'],
+        ticker, currency
     )
 
     try:
         quote = commands.generic_coin_info(
             ticker,
             CONN,
-            cooldown_time=CONFIG.get_option('ProsperBot', 'generic_info', None, 30),
+            currency=currency,
+            cooldown_time=0,
             logger=api_config.LOGGER
         )
         if not quote:
