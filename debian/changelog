@@ -1,3 +1,8 @@
+prosper-bots (0.1.1) stable; urgency=low
+  * Adds currency to !coins command (DISCORD)
+  * No updates to slack (SLACK)
+ -- John Purcell <jpurcell.ee@gmail.com>  Fri, 03 Nov 2017 08:30:00 -0700
+
 prosper-bots (0.1.0) stable; urgency=low
   * Adds discord coverage to bot framework
   * Mirrors (most) functionality from prosper_slackbot
