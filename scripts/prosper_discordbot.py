@@ -5,7 +5,7 @@ import re
 import pprint
 
 import discord
-from discord.ext import commands
+from discord.ext import commands as discord_commands
 from plumbum import cli
 from contexttimer import Timer
 import requests
@@ -18,7 +18,7 @@ from prosper_bots._version import __version__
 import prosper_bots.config as api_config
 import prosper_bots.utils as utils
 import prosper_bots.connections as connections
-import prosper_bots.slack_utils as slack_utils
+import prosper_bots.platform_utils as platform_utils
 import prosper_bots.commands as commands
 import prosper_bots.exceptions as exceptions
 
@@ -28,7 +28,7 @@ PROGNAME = 'ProsperDiscordBot'
 CONN = connections.build_connection('slackbot')
 PP = pprint.PrettyPrinter(indent=2)
 
-bot = commands.Bot(
+bot = discord_commands.Bot(
     command_prefix=CONFIG.get('DiscordBot', 'bot_prefix'),
     description='ProsperBot is BESTBOT'
 )
@@ -39,6 +39,24 @@ async def on_ready():
     api_config.LOGGER.info(bot.user.name)
     api_config.LOGGER.info(bot.user.id)
     api_config.LOGGER.info('------')
+
+@bot.command(pass_context=True)
+async def version(context):
+    """echo deployment info"""
+    message_info = platform_utils.parse_discord_context_object(context)
+    api_config.LOGGER.info(
+        '%s #%s @%s -- Version Info',
+        message_info['team_name'],
+        message_info['channel_name'],
+        message_info['user_name'],
+    )
+
+    try:
+        version_str = commands.version_info(PROGNAME)
+    except Exception:  # pragma: no cover
+        api_config.LOGGER.error('Unable to build version info', exc_info=True)
+
+    await bot.say(version_str)
 
 class ProsperDiscordBot(cli.Application):
     """wrapper for slackbot Main()"""
@@ -71,10 +89,11 @@ class ProsperDiscordBot(cli.Application):
 
         logger.error('STARTING PROSPERBOT -- DISCORD %s', platform.node())
         try:
-
-            bot.run(CONFIG.get('DiscordBot', 'bot_token'))
+            status = bot.run(CONFIG.get('DiscordBot', 'api_token'))
         except Exception:
             logger.critical('Going down in flames!', exc_info=True)
+
+        logger.warning('Discord.py exited unexpectedly: {}'.format(status))
 
 if __name__ == '__main__':
     ProsperDiscordBot.run()

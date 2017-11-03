@@ -6,7 +6,7 @@ import pytest
 import helpers
 import slackbot.slackclient as slackclient
 
-import prosper_bots.slack_utils as slack_utils
+import prosper_bots.platform_utils as platform_utils
 import prosper_bots.exceptions as exceptions
 
 

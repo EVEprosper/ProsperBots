@@ -18,7 +18,7 @@ from prosper_bots._version import __version__
 import prosper_bots.config as api_config
 import prosper_bots.utils as utils
 import prosper_bots.connections as connections
-import prosper_bots.slack_utils as slack_utils
+import prosper_bots.platform_utils as platform_utils
 import prosper_bots.commands as commands
 import prosper_bots.exceptions as exceptions
 
@@ -31,7 +31,7 @@ PP = pprint.PrettyPrinter(indent=2)
 @slackbot.bot.respond_to('version', re.IGNORECASE)
 def which_prosperbot(message):
     """echo deployment info"""
-    message_info = slack_utils.parse_message_metadata(message)
+    message_info = platform_utils.parse_slack_message_object(message)
     api_config.LOGGER.info(
         '#%s @%s -- Version Info',
         message_info['channel_name'],
@@ -48,7 +48,7 @@ def which_prosperbot(message):
 @slackbot.bot.respond_to('set mode (.*)')
 def change_mode(message, mode):
     """set expected mode for channel"""
-    message_info = slack_utils.parse_message_metadata(message)
+    message_info = platform_utils.parse_slack_message_object(message)
     print(message._body)
     api_config.LOGGER.info(
         '#%s @%s -- Setting channel mode %s',
@@ -82,7 +82,7 @@ def change_mode(message, mode):
 def generic_stock_info(message, ticker):
     """echo basic info about stock"""
     ticker = ticker.upper()
-    message_info = slack_utils.parse_message_metadata(message)
+    message_info = platform_utils.parse_slack_message_object(message)
     api_config.LOGGER.info(
         '#%s @%s -- Basic company info %s',
         message_info['channel_name'],
@@ -131,7 +131,7 @@ def generic_stock_info(message, ticker):
 def stock_news(message, ticker):
     """fetch relevant article for requested stock"""
     ticker = ticker.upper()
-    message_info = slack_utils.parse_message_metadata(message)
+    message_info = platform_utils.parse_slack_message_object(message)
     api_config.LOGGER.info(
         '#%s @%s -- Stock News %s',
         message_info['channel_name'],
