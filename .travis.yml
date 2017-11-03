@@ -5,7 +5,7 @@ python:
   - "3.6-dev" # 3.6 development branch
 install: 
   - "pip install semantic_version"
-  - "pip install ."
+  - "pip install . -U --force-reinstall --no-cache-dir"
 script: 
   - "python setup.py test"
 after_success:
