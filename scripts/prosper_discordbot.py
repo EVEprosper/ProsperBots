@@ -25,7 +25,7 @@ import prosper_bots.exceptions as exceptions
 HERE = path.abspath(path.dirname(__file__))
 CONFIG = p_config.ProsperConfig(path.join(HERE, 'bot_config.cfg'))
 PROGNAME = 'ProsperDiscordBot'
-CONN = connections.build_connection('slackbot')
+CONN = connections.build_connection('discordbot')
 PP = pprint.PrettyPrinter(indent=2)
 
 bot = discord_commands.Bot(
@@ -57,6 +57,58 @@ async def version(context):
         api_config.LOGGER.error('Unable to build version info', exc_info=True)
 
     await bot.say(version_str)
+
+@bot.command(pass_context=True)
+async def price(context, ticker):
+    """fetch relevant article for requested stock"""
+    ticker = ticker.upper()
+    message_info = platform_utils.parse_discord_context_object(context)
+    api_config.LOGGER.info(
+        '%s #%s @%s -- Stock News',
+        message_info['team_name'],
+        message_info['channel_name'],
+        message_info['user_name'],
+    )
+
+    try:
+        quote = commands.generic_stock_info(
+            ticker, CONN, cooldown_time=0, logger=api_config.LOGGER,
+            info_mask=['name', 'current_price', 'change_pct']
+        )
+        if not quote:
+            raise exceptions.EmptyQuoteReturned
+
+        direction = float(quote.split()[-1].replace('%', ''))
+        link, details = commands.stock_news(
+            ticker,
+            direction,
+            logger=api_config.LOGGER
+        )
+    except exceptions.ProsperBotException:
+        api_config.LOGGER.warning(
+            'Unable to resolve basic stock info for %s',
+            ticker, exc_info=True
+        )
+        quote = 'ERROR - NO QUOTE DATA FOUND FOR {}'.format(ticker)
+        link = ''
+        details = ''
+    except Exception as err:
+        api_config.LOGGER.error(
+            'Unable to resolve basic stock info for %s',
+            ticker, exc_info=True
+        )
+        quote = 'ERROR - UNABLE TO RESOLVE NEWS {} -- {}'.format(
+            ticker,
+            repr(err)
+        )
+        link = ''
+
+    if quote:  # only emit if there is data
+        api_config.LOGGER.debug(quote)
+        await bot.say(
+            '```' + quote + '```\n' +
+            link + ' ' + details
+        )
 
 class ProsperDiscordBot(cli.Application):
     """wrapper for slackbot Main()"""
