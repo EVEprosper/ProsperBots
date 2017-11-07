@@ -11,6 +11,7 @@ StandardOutput=syslog
 StandardError=syslog
 User=prosper
 User=root
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
