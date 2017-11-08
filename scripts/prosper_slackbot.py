@@ -78,7 +78,7 @@ def change_mode(message, mode):
     message.send('OK, I set this channel to `{}`'.format(set_mode.value))
 
 
-@slackbot.bot.listen_to(r'`\$(.*)`')
+@slackbot.bot.listen_to(r'\$(.*)')
 def generic_stock_info(message, ticker):
     """echo basic info about stock"""
     ticker = ticker.upper()
