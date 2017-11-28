@@ -145,7 +145,8 @@ setup(
         'plumbum~=1.6.3',
         'pandas==0.20.3,!=0.21.0',
         'requests-cache~=0.4.13',
-        'contexttimer~=0.3.3'
+        'contexttimer~=0.3.3',
+        'plotly~=2.2.2'
     ],
     tests_require=[
         'pytest',

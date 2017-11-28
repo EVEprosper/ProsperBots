@@ -184,3 +184,24 @@ def stock_news(
 
     logger.info('--best article: %s (%s)', url, score)
     return str(url), str(score)
+
+def generate_candlestick_stocks(
+        ticker,
+        range=60,
+        logger=api_config.LOGGER
+):
+    """build an OHLC candlestick plot for a requested stock
+
+    Notes:
+        Uses IEX sources
+
+    Args:
+        ticker (str): ticker of company to generate plot from
+        range (int, optional): days to include in plot
+        logger (:obj:`logging.logger`, optional): logging handle
+
+    Returns:
+        str: link to generated plot
+
+    """
+    pass
