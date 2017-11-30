@@ -136,7 +136,7 @@ setup(
     },
     install_requires=[
         'ProsperCommon~=1.1.2',
-        'ProsperDatareader[nltk]~=1.2.2',
+        'ProsperDatareader[nltk]~=2.0.0a2',
         'tinydb~=3.4.1',
         'tinymongo~=0.1.9',
         'discord.py~=0.16.10',
@@ -144,7 +144,6 @@ setup(
         'numpy~=1.13.3',
         'plumbum~=1.6.3',
         'pandas==0.20.3,!=0.21.0',
-        'requests-cache~=0.4.13',
         'contexttimer~=0.3.3',
         'plotly~=2.2.2'
     ],

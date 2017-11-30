@@ -6,6 +6,7 @@ from contexttimer import Timer
 
 import prosper.datareader.coins as coins
 import prosper.datareader.stocks as stocks
+import prosper.datareader.news as news
 import prosper.datareader.utils as pdr_utils
 
 from . import _version
@@ -66,7 +67,7 @@ def generic_stock_info(
 
     with Timer() as stock_info_timer:
         try:
-            raw_data = stocks.prices.get_quote_rh(ticker)
+            raw_data = stocks.get_quote_rh(ticker)
             data = ' '.join(list(map(str, raw_data.loc[0, info_mask])))
         except Exception:  # pragma: no cover
             logger.warning('unable to fetch basic ticker info', exc_info=True)
@@ -112,7 +113,7 @@ def generic_coin_info(
 
     with Timer() as coin_info_timer:
         try:
-            raw_data = coins.prices.get_quote_cc(
+            raw_data = coins.get_quote_cc(
                 [ticker],
                 logger=logger,
                 currency=currency,
@@ -152,7 +153,7 @@ def stock_news(
     logger.info('--fetching news')
     with Timer() as stock_news_timer:
         try:
-            news_df = stocks.news.company_news_google(ticker, logger=logger)
+            news_df = news.company_news_rh(ticker, logger=logger)
             news_df = pdr_utils.vader_sentiment(news_df, 'title', logger=logger)
         except Exception as err:
             logger.warning('unable to fetch news for ticker %s', ticker, exc_info=True)

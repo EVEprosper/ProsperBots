@@ -9,7 +9,7 @@ import pandas as pd
 
 from . import config as api_config
 from . import exceptions
-import prosper.datareader.coins.info as info
+import prosper.datareader.coins as coins
 
 HERE = path.abspath(path.dirname(__file__))
 
