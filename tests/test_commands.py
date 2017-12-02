@@ -176,5 +176,5 @@ class TestStockNews:
             1.0
         )
 
-        assert 'ERROR - ' in url
+        assert url == 'NO NEWS FOUND'
         assert score == ''

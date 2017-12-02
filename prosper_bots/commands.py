@@ -155,6 +155,9 @@ def stock_news(
         try:
             news_df = news.company_news_rh(ticker, logger=logger)
             news_df = pdr_utils.vader_sentiment(news_df, 'title', logger=logger)
+        except KeyError as err:
+            logger.warning('Blank feed found', exc_info=True)
+            return 'NO NEWS FOUND',''
         except Exception as err:
             logger.warning('unable to fetch news for ticker %s', ticker, exc_info=True)
             return 'ERROR - UNABLE TO FETCH NEWS FOR {} - {}'.format(
