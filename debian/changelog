@@ -1,3 +1,8 @@
+prosper-bots (0.2.0) stable; urgency=low
+  * Updates ProsperDatareader to v2 
+  * Changes news feed from Google->Robinhood (DEPRECATED)
+ -- John Purcell <jpurcell.ee@gmail.com>  Sat, 02 Dec 2017 15:30:00 -0700
+
 prosper-bots (0.2.0a1) stable; urgency=low
   * Updates ProsperDatareader plugins to v2 framework
  -- John Purcell <jpurcell.ee@gmail.com>  Wed, 29 Nov 2017 18:00:00 -0700
