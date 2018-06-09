@@ -44,7 +44,7 @@ class TestGenericStockInfo:
         print(response)
         values = search('{company_name} {price:f} {change_pct:%}', response)
 
-        assert values['company_name'] == 'Micron Technology, Inc. - Common Stock'
+        assert values['company_name'] == 'Micron Technology, Inc. Common Stock'
         assert isinstance(values['price'], float)
         assert isinstance(values['change_pct'], float)
 
