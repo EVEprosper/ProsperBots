@@ -1,0 +1,1 @@
+worker: python3 scripts/prosper_slackbot.py
